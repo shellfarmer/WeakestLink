@@ -3,28 +3,29 @@
     <head>
         <style>
             body {
-                min-width: 420px;
+                min-width: 768px;
                 overflow-x: hidden;
                 font-family: Arial, sans-serif;
                 font-size: 14px;
-            }
-            input, textarea {
-                width: 420px;
-            }
-            input#save {
-                font-weight: bold; width: auto;
             }
         </style>
         <script src="popup.js"></script>
     </head>
     <body>
+       <b> Linkedin User Dump </b><br>
         <ol>
-        <li>Sign into LinkedIn</li>
-        <li>Browse to the required company page</li>
-        <li>Click 'See all ### employees on linkedin'</li>
-        <li>If there are more than 1000 results (100 pages) then use the filters to reduce the number and run multiple dumps </li>
-        <li>Click the Dump Users button below and leave the focus on the search browser tab</li>
+            <li>Sign into LinkedIn</li>
+            <li>Browse to the required company page</li>
+            <li>Click 'See all ### employees on linkedin'</li>
+            <li>If there are more than 1000 results (100 pages) then use the filters to reduce the number and run multiple dumps </li>
+            <li>Click the Dump Users button below and leave the focus on the search browser tab</li>
         </ol>
+        <p>
+            Options: <br>
+            <input type="checkbox" id=junk checked>Remove junk from names<br>
+            <input type="checkbox" id="genusers" checked>Generate possible usernames<br>
+        </p>
         <button id="dumpusers">Dump Users</button>
+        <button id="canceldump" disabled>Cancel</button>
     </body>
 </html>
