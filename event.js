@@ -75,11 +75,11 @@ function dumpCurrentPage(callback, junk, genusers) {
             // Check if url has already been parsed
             if (!urls.includes(message.url) && finished === '') {
                 // parse users and store in userdata
-                var people = message.body.split('<span class=\"name actor-name\">');
-
+                //var people = message.body.split('<span class=\"name actor-name\">');
+                var people = message.body.split('"title":{"textDirection":"FIRST_STRONG","text":"');
                 for (var i = 1; i < people.length; i++) {
-                    var person = people[i].split('</span')[0];
-
+                    //var person = people[i].split('</span')[0];
+                    var person = people[i].split('"')[0];
                     if(junk || genusers){
                         // try and catch well known accrediations
                         var username = person.toLowerCase();
