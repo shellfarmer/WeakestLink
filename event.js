@@ -1,3 +1,9 @@
+/*
+    - Fix bug where the extension seems to need to be reloaded to work
+    - Improve on postnominals
+
+*/
+
 // Function to allow js to sleep while pages are loaded
 function sleep(milliseconds) {
     var start = new Date().getTime();
@@ -8,19 +14,17 @@ function sleep(milliseconds) {
     }
 }
 
-var userdata = '';
 var urls = [];
 var count = 0;
-
 var finished = '';
-
-var header = 'LinkedIn Name,clean name,first,firstlast,first.last,firstl,f.last,flast,lfirst,l.first,lastf,last,last.f,last.first,fl\n'
-userdata = userdata + header
-
+var userdata = '';
+var page = '';
+var postnominals = ['mba', 'msc', 'bsc', 'ma', 'acma', 'cissp', 'crt', 'mcipd', 'certrp', 'sphr', 'acis', 'frsa', 'ba', 'phd',];
+var filename = '';
 
 function cancelDump(callback) {
     finished = 'Cancelled';
-    callback(userdata, finished, count);
+    callback(userdata, finished, count, filename);
 }
 
 function isUpperCase(str) {
@@ -29,8 +33,18 @@ function isUpperCase(str) {
 
 // This function is called onload in the popup code
 function dumpCurrentPage(callback, junk, genusers) {
+
+    var header = 'LinkedIn Name';
+    if (junk){
+      header += ',clean name';
+    }
+    if (genusers){
+      header += ',first,firstlast,first.last,firstl,f.last,flast,lfirst,l.first,lastf,last,last.f,last.first,fl';
+    }
+
+    userdata = header + '\n';
+
     // Inject the content script into the current page
-    console.log('Initial execute');
     chrome.tabs.executeScript(null, {
         file: 'content.js'
     });
@@ -38,58 +52,81 @@ function dumpCurrentPage(callback, junk, genusers) {
     // Listener that recieves messages from injected content.js
     chrome.runtime.onMessage.addListener(function(message) {
         try{
+            if(filename == ''){
+                filterparts = message.body.split('{"filterValues":[{"displayValue":"');
+                for(var i = 1; i < filterparts.length; i++){
+                  filename = filename + '-' + filterparts[i].split('"')[0];
+                }
+            }
+
             // No more results return data to popup
-            if (message.summary.includes('Your search returned no results. Try removing filters or rephrasing your search')) {
+            if (message.body.includes('Your search returned no results. Try removing filters or rephrasing your search')) {
                 finished = 'Completed';
-                callback(userdata, finished, count);
+                callback(userdata, finished, count, filename);
+                return;
+            }
+
+            if (message.body.includes('upgrade to Premium to continue searching')){
+                finished = 'Search limit hit';
+                callback(userdata, finished, count, filename);
                 return;
             }
 
             // Check if url has already been parsed
             if (!urls.includes(message.url) && finished === '') {
                 // parse users and store in userdata
-                var people = message.summary.split('<span class=\"name actor-name\">');
+                var people = message.body.split('<span class=\"name actor-name\">');
 
                 for (var i = 1; i < people.length; i++) {
                     var person = people[i].split('</span')[0];
 
-                    var username = person.toLowerCase()
+                    if(junk || genusers){
+                        // try and catch well known accrediations
+                        var username = person.toLowerCase();
 
-                    var nameparts = username.split(' ');
-                    var firstname = nameparts[0];
-                    var lastname = nameparts[nameparts.length - 1];
+                        // Replace diacritics with standard characters - technically not needed for AD but may avoid some problems
+                        username = person.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
-                    if(junk){
+                        // clear out any attempts at
+                        username = username.replace('/', ' ');
+                        username = username.replace('\\', ' ');
+
+                        for(var index in postnominals){
+                            username = username.replace(new RegExp("\\b" + postnominals[index] + "\\b"), '');
+                        }
+
+                        username = username.trim();
+
+                        var nameparts = username.split(' ');
+                        var firstname = nameparts[0];
+                        var lastname = nameparts[nameparts.length - 1];
+
                         // do junk cleaning
-
-
-                        if(lastname.includes('(')){
+                        if(username.includes('(')){
                           // Remove any random bits after curley brackets such as accrediations
-                          username = username.split('(')[0];
+                          username = username.split('(')[0].trim();
                           nameparts = username.split(' ');
                           lastname = nameparts[nameparts.length - 1]
                         }
 
                         // Remove any random bits after commas such as accrediations
-                        if(lastname.includes(',')){
-                          username = username.split(',')[0];
+                        if(username.includes(',')){
+                          username = username.split(',')[0].trim();
                           nameparts = username.split(' ');
-                          lastname = nameparts[nameparts.length - 1]
+                          lastname = nameparts[nameparts.length - 1];
                         }
-
-                       // Need way to chop out MSc Bsc Meng etc
 
                         // Hidden surname (M.) chop off final dot,  need to exclude some some username permitations
                         if(lastname.length == 2 && lastname.charAt(1) == '.'){
                             lastname = lastname.charAt(0);
                         }
 
-
-
+                        // remove any redundant spaces
+                        firstname = firstname.trim();
+                        lastname = lastname.trim();
                     }
 
                     if(genusers){
-
                         // first                anna
                         var user1 = firstname;
                         // firstlast            annakey
@@ -112,17 +149,19 @@ function dumpCurrentPage(callback, junk, genusers) {
                         var user10 = lastname;
                         // last.f               key.a
                         var user11 =  lastname + firstname.charAt(0);
-                        // last.first           key.anna
+                        // last.first           key.annaompleted
                         var user12 =  lastname + firstname;
                         // fl                   ak
                         var user13 =  lastname.charAt(0) + firstname.charAt(0);
 
-                        userdata = userdata.concat(person + ',' + username + ',' + user1 + ',' + user2 + ',' + user3 + ',' + user4 + ',' + user5 +  ',' + user6 +  ',' + user7  +  ',' + user8  +  ',' + user9  +  ',' + user10 +  ',' + user11  +  ',' + user12  +  ',' + user13   +'\n');
+                        userdata = userdata.concat('"' + person + '",' + firstname + ' ' + lastname + ',' + user1 + ',' + user2 + ',' + user3 + ',' + user4 + ',' + user5 +  ',' + user6 +  ',' + user7  +  ',' + user8  +  ',' + user9  +  ',' + user10 +  ',' + user11  +  ',' + user12  +  ',' + user13   +'\n');
+                    }
+                    else if (junk) {
+                        userdata = userdata.concat(person + ',' + firstname + ' ' + lastname + '\n');
                     }
                     else {
                         userdata = userdata.concat(person + '\n');
                     }
-
                     count++;
                 }
 
@@ -138,17 +177,13 @@ function dumpCurrentPage(callback, junk, genusers) {
                     var href = message.url.concat('&page=', 2);
                 }
 
-                console.log('Gen Next url: ' + href);
-
                 // Set the tab to the require page, update the tab and execute the injected js
                 chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
                     var tab = tabs[0];
-                    console.log('Updating browser with url: ' + href);
                     chrome.tabs.update(tab.id, {
                         url: href
                     });
                     sleep(5000);
-                    console.log('Execute js on: ' + href);
                     chrome.tabs.executeScript(tab.id, {
                         file: 'content.js'
                     });
@@ -160,7 +195,7 @@ function dumpCurrentPage(callback, junk, genusers) {
         {
             finished = 'Error'
             console.log(err)
-            callback(userdata, finished, count);
+            callback(userdata, finished, count, filename);
 
         }
     });

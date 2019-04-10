@@ -1,12 +1,15 @@
-function endDump(message, finished, count) {
-    var link = document.createElement("a");
-    link.textContent = "Save as CSV";
-    link.download = "LinkedIn Users.csv";
-    link.href = "data:text/csv," + message;
+function endDump(message, finished, count, filename) {
+    var link = document.createElement('a');
+    link.textContent = 'Save as CSV';
+    link.download = filename + '.csv';
+    link.href = 'data:text/csv,' + message;
     document.body.appendChild(link);
     document.getElementById('dumpusers').disabled = false;
+    link.click();
+    if(!alert('Dump finished as ' + finished + ' with ' + count + ' users')){
+      chrome.runtime.reload();
+    }
 
-    alert('Dump finishded as ' + finished + ' with ' + count + ' users');
 }
 
 window.addEventListener('load', function(evt) {
@@ -29,7 +32,5 @@ window.addEventListener('load', function(evt) {
       chrome.runtime.getBackgroundPage(function(eventPage) {
           eventPage.cancelDump(endDump)
         });
-
     };
-
 });
