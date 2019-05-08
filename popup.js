@@ -23,9 +23,18 @@ window.addEventListener('load', function(evt) {
         var junk = document.getElementById('junk').checked;
         var genusers = document.getElementById('genusers').checked;
 
+        chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
+            var tab = tabs[0];
+            var temp = tab.url + '&page=1';
+            chrome.tabs.update(tab.id, {
+                url: temp
+            });
+        });
+
         chrome.runtime.getBackgroundPage(function(eventPage) {
             eventPage.dumpCurrentPage(endDump, junk, genusers)
         });
+
     };
 
     cancelbutton.onclick = function(element) {

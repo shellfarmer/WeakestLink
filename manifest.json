@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "LinkedIn User Dump",
     "description": "Extracts users from the currently viewed LinkedIn company page",
-    "version": "0.2",
+    "version": "0.3",
     "background": {
         "scripts": ["event.js"],
         "persistent": false

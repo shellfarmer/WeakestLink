@@ -1,10 +1,9 @@
 /*
     - Fix bug where the extension seems to need to be reloaded to work
     - Improve on postnominals
-
 */
 
-// Function to allow js to sleep while pages are loaded
+// Function to allow js to sleep while pages are loaded,  seems ineffective...
 function sleep(milliseconds) {
     var start = new Date().getTime();
     for (var i = 0; i < 1e7; i++) {
@@ -17,10 +16,11 @@ function sleep(milliseconds) {
 var urls = [];
 var count = 0;
 var finished = '';
-var userdata = '';
 var page = '';
-var postnominals = ['mba', 'msc', 'bsc', 'ma', 'acma', 'cissp', 'crt', 'mcipd', 'certrp', 'sphr', 'acis', 'frsa', 'ba', 'phd',];
+var postnominals = ['mba', 'msc', 'bsc', 'ma', 'acma', 'cissp', 'crt', 'mcipd', 'certrp', 'sphr', 'acis', 'frsa', 'ba', 'phd'];
 var filename = '';
+var userdata = '';
+var shortnames = '';
 
 function cancelDump(callback) {
     finished = 'Cancelled';
@@ -33,21 +33,23 @@ function isUpperCase(str) {
 
 // This function is called onload in the popup code
 function dumpCurrentPage(callback, junk, genusers) {
-
     var header = 'LinkedIn Name';
     if (junk){
-      header += ',clean name';
+      header = 'LinkedIn Name,clean name';
     }
     if (genusers){
-      header += ',first,firstlast,first.last,firstl,f.last,flast,lfirst,l.first,lastf,last,last.f,last.first,fl';
+      header = 'LinkedIn Name,clean name,first,firstlast,first.last,firstl,f.last,flast,lfirst,l.first,lastf,last,last.f,last.first,fl';
     }
 
     userdata = header + '\n';
 
     // Inject the content script into the current page
+
+    sleep(2000);
     chrome.tabs.executeScript(null, {
         file: 'content.js'
     });
+
 
     // Listener that recieves messages from injected content.js
     chrome.runtime.onMessage.addListener(function(message) {
@@ -58,17 +60,19 @@ function dumpCurrentPage(callback, junk, genusers) {
                   filename = filename + '-' + filterparts[i].split('"')[0];
                 }
             }
+            console.log(message.url);
+
 
             // No more results return data to popup
             if (message.body.includes('Your search returned no results. Try removing filters or rephrasing your search')) {
                 finished = 'Completed';
-                callback(userdata, finished, count, filename);
+                callback(userdata.concat(shortnames), finished, count, filename);
                 return;
             }
 
             if (message.body.includes('upgrade to Premium to continue searching')){
                 finished = 'Search limit hit';
-                callback(userdata, finished, count, filename);
+                callback(userdata.concat(shortnames), finished, count, filename);
                 return;
             }
 
@@ -80,17 +84,21 @@ function dumpCurrentPage(callback, junk, genusers) {
                 for (var i = 1; i < people.length; i++) {
                     //var person = people[i].split('</span')[0];
                     var person = people[i].split('"')[0];
+                    var short = false;
+                    console.log(person);
                     if(junk || genusers){
                         // try and catch well known accrediations
                         var username = person.toLowerCase();
 
-                        // Replace diacritics with standard characters - technically not needed for AD but may avoid some problems
-                        username = person.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                        // Replace diacritics with standard characters then remove any none ascii chars - technically not needed for AD but may avoid some problems
+                        username = person.normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '');
 
-                        // clear out any attempts at
+                        // clear out any possible dividers
                         username = username.replace('/', ' ');
                         username = username.replace('\\', ' ');
 
+
+                        // Remove postnomials
                         for(var index in postnominals){
                             username = username.replace(new RegExp("\\b" + postnominals[index] + "\\b"), '');
                         }
@@ -101,9 +109,8 @@ function dumpCurrentPage(callback, junk, genusers) {
                         var firstname = nameparts[0];
                         var lastname = nameparts[nameparts.length - 1];
 
-                        // do junk cleaning
+                        // Remove any random bits after curley brackets such as accrediations
                         if(username.includes('(')){
-                          // Remove any random bits after curley brackets such as accrediations
                           username = username.split('(')[0].trim();
                           nameparts = username.split(' ');
                           lastname = nameparts[nameparts.length - 1]
@@ -119,11 +126,13 @@ function dumpCurrentPage(callback, junk, genusers) {
                         // Hidden surname (M.) chop off final dot,  need to exclude some some username permitations
                         if(lastname.length == 2 && lastname.charAt(1) == '.'){
                             lastname = lastname.charAt(0);
+                            short = true;
                         }
 
-                        // remove any redundant spaces
-                        firstname = firstname.trim();
-                        lastname = lastname.trim();
+                        // remove any redundant spaces and drop to lowercase.
+                        firstname = firstname.trim().toLowerCase();
+                        lastname = lastname.trim().toLowerCase();
+                        username = username.trim().toLowerCase();
                     }
 
                     if(genusers){
@@ -131,7 +140,7 @@ function dumpCurrentPage(callback, junk, genusers) {
                         var user1 = firstname;
                         // firstlast            annakey
                         var user2 = firstname + lastname;
-                        // first.last           anna.key
+                        // first.last           anna.key&page=5
                         var user3 = firstname + '.' + lastname;
                         // firstl               annak
                         var user4 = firstname + lastname.charAt(0);
@@ -149,19 +158,30 @@ function dumpCurrentPage(callback, junk, genusers) {
                         var user10 = lastname;
                         // last.f               key.a
                         var user11 =  lastname + firstname.charAt(0);
-                        // last.first           key.annaompleted
+                        // last.first           key.anna
                         var user12 =  lastname + firstname;
                         // fl                   ak
                         var user13 =  lastname.charAt(0) + firstname.charAt(0);
 
-                        userdata = userdata.concat('"' + person + '",' + firstname + ' ' + lastname + ',' + user1 + ',' + user2 + ',' + user3 + ',' + user4 + ',' + user5 +  ',' + user6 +  ',' + user7  +  ',' + user8  +  ',' + user9  +  ',' + user10 +  ',' + user11  +  ',' + user12  +  ',' + user13   +'\n');
+                        if(short){
+                            shortnames = shortnames.concat('"' + person + '",' + firstname + ' ' + lastname + ',' + user1 + ',' + user2 + ',' + user3 + ',' + user4 + ',' + user5 +  ',' + user6 +  ',' + user7  +  ',' + user8  +  ',' + user9  +  ',' + user10 +  ',' + user11  +  ',' + user12  +  ',' + user13   +'\n');
+                        }
+                        else {
+                          userdata = userdata.concat('"' + person + '",' + firstname + ' ' + lastname + ',' + user1 + ',' + user2 + ',' + user3 + ',' + user4 + ',' + user5 +  ',' + user6 +  ',' + user7  +  ',' + user8  +  ',' + user9  +  ',' + user10 +  ',' + user11  +  ',' + user12  +  ',' + user13   +'\n');
+                        }
                     }
                     else if (junk) {
-                        userdata = userdata.concat(person + ',' + firstname + ' ' + lastname + '\n');
+                        if(short){
+                          shortnames = shortnames.concat(person + ',' + firstname + ' ' + lastname + '\n');
+                        }
+                        else {
+                          userdata = userdata.concat(person + ',' + firstname + ' ' + lastname + '\n');
+                        }
                     }
                     else {
-                        userdata = userdata.concat(person + '\n');
+                          userdata = userdata.concat(person + '\n');
                     }
+                    short = false;
                     count++;
                 }
 
@@ -177,13 +197,16 @@ function dumpCurrentPage(callback, junk, genusers) {
                     var href = message.url.concat('&page=', 2);
                 }
 
+
+                sleep(5000 + (Math.floor(Math.random() * 20000)));userdata + shortnames
                 // Set the tab to the require page, update the tab and execute the injected js
                 chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
                     var tab = tabs[0];
                     chrome.tabs.update(tab.id, {
                         url: href
                     });
-                    sleep(5000);
+
+                    sleep(5000 + (Math.floor(Math.random() * 20000)));
                     chrome.tabs.executeScript(tab.id, {
                         file: 'content.js'
                     });
@@ -195,8 +218,7 @@ function dumpCurrentPage(callback, junk, genusers) {
         {
             finished = 'Error'
             console.log(err)
-            callback(userdata, finished, count, filename);
-
+            callback(userdata.concat(shortnames), finished, count, filename);
         }
     });
 };
