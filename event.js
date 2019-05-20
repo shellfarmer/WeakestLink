@@ -29,25 +29,26 @@ var urls = [];
 var count = 0;
 var finished = '';
 var page = '';
-//var postnominals = ['mba', 'msc', 'bsc', 'ma', 'acma', 'cissp', 'crt', 'mcipd', 'certrp', 'sphr', 'acis', 'frsa', 'ba', 'phd', 'cciso'];
-
-
 var postnominals = []
 var filename = '';
 var userdata = '';
 var shortnames = '';
 
-function cancelDump(callback) {
-    finished = 'Cancelled';
-    callback(userdata, finished, count, filename);
-}
-
-function isUpperCase(str) {
-    return str === str.toUpperCase();
+function completed(data, finished, count, filename)
+{
+  var link = document.createElement('a');
+  link.textContent = 'Save as CSV';
+  link.download = filename + '.csv';
+  link.href = 'data:text/csv,' + data;
+  document.body.appendChild(link);
+  link.click();
+  if(!alert('Dump finished as ' + finished + ' with ' + count + ' users')){
+    chrome.runtime.reload();
+  }
 }
 
 // This function is called onload in the popup code
-function dumpCurrentPage(callback, junk, genusers) {
+function dumpCurrentPage(tabid, junk, genusers) {
     postnominals = getpn();
     var header = 'LinkedIn Name';
     if (junk){
@@ -60,12 +61,10 @@ function dumpCurrentPage(callback, junk, genusers) {
     userdata = header + '\n';
 
     // Inject the content script into the current page
-
     sleep(2000);
     chrome.tabs.executeScript(null, {
         file: 'content.js'
     });
-
 
     // Listener that recieves messages from injected content.js
     chrome.runtime.onMessage.addListener(function(message) {
@@ -79,14 +78,16 @@ function dumpCurrentPage(callback, junk, genusers) {
 
             // No more results return data to popup
             if (message.body.includes('Your search returned no results. Try removing filters or rephrasing your search')) {
-                finished = 'Completed';
-                callback(userdata.concat(shortnames), finished, count, filename);
+                finished = 'completed';
+                completed(userdata.concat(shortnames), finished, count, filename);
+
                 return;
             }
 
+            // Out of search credits
             if (message.body.includes('upgrade to Premium to continue searching')){
-                finished = 'Search limit hit';
-                callback(userdata.concat(shortnames), finished, count, filename);
+                finished = 'search limit hit';
+                completed(userdata.concat(shortnames), finished, count, filename);
                 return;
             }
 
@@ -109,6 +110,17 @@ function dumpCurrentPage(callback, junk, genusers) {
                         // clear out any possible dividers
                         username = username.replace('/', ' ');
                         username = username.replace('\\', ' ');
+                        username = username.replace('\(.*\)', '')
+
+                        // Remove any random bits after commas such as accrediations
+                        if(username.includes(',')){
+                          username = username.split(',')[0].trim();
+                        }
+
+                        // Remove any random bits after hyphens such as accrediations
+                        if(username.includes('-')){
+                          username = username.split('-')[0].trim();
+                        }
 
                         // Remove postnominals
                         for(var index in postnominals){
@@ -119,7 +131,6 @@ function dumpCurrentPage(callback, junk, genusers) {
                             if(username.endsWith(" " + postnominals[index])) {
                               username = username.substring(0, username.lastIndexOf(" "));
                             }
-
                         }
 
                         username = username.trim();
@@ -128,26 +139,6 @@ function dumpCurrentPage(callback, junk, genusers) {
                         var firstname = nameparts[0];
                         var lastname = nameparts[nameparts.length - 1];
 
-                        // Remove any random bits after curley brackets such as accrediations
-                        if(username.includes('(')){
-                          username = username.split('(')[0].trim();
-                          nameparts = username.split(' ');
-                          lastname = nameparts[nameparts.length - 1]
-                        }
-
-                        // Remove any random bits after commas such as accrediations
-                        if(username.includes(',')){
-                          username = username.split(',')[0].trim();
-                          nameparts = username.split(' ');
-                          lastname = nameparts[nameparts.length - 1];
-                        }
-
-                        // Remove any random bits after hyphens such as accrediations
-                        if(username.includes('-')){
-                          username = username.split('-')[0].trim();
-                          nameparts = username.split(' ');
-                          lastname = nameparts[nameparts.length - 1];
-                        }
 
                         // Hidden surname (M.) chop off final dot,  need to exclude some some username permitations
                         if(lastname.length == 2 && lastname.charAt(1) == '.'){
@@ -223,28 +214,33 @@ function dumpCurrentPage(callback, junk, genusers) {
                     var href = message.url.concat('&page=', 2);
                 }
 
-
+                // Swap for?   setTimeout(function(){ ; }, 2000);
                 sleep(5000 + (Math.floor(Math.random() * 20000)));
+
                 // Set the tab to the require page, update the tab and execute the injected js
-                chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
-                    var tab = tabs[0];
-                    chrome.tabs.update(tab.id, {
+                chrome.tabs.get(tabid, function(tab) {
+                  if (chrome.runtime.lastError) {
+                    finished = 'Cancelled';
+                    completed(userdata.concat(shortnames), finished, count, filename);
+                  }
+                  else {
+                    chrome.tabs.update(tabid, {
                         url: href
                     });
-
                     sleep(5000 + (Math.floor(Math.random() * 20000)));
-                    chrome.tabs.executeScript(tab.id, {
+                    chrome.tabs.executeScript(tabid, {
                         file: 'content.js'
                     });
                     urls.push(message.url);
+                  }
                 });
             }
         }
         catch(err)
         {
-            finished = 'Error';
+            finished = 'error';
             console.log(err);
-            callback(userdata.concat(shortnames), finished, count, filename);
+            completed(userdata.concat(shortnames), finished, count, filename);
         }
     });
 };
