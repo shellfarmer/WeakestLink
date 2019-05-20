@@ -1,8 +1,3 @@
-/*
-    - Fix bug where the extension seems to need to be reloaded to work
-    - Improve on postnominals
-*/
-
 // Function to allow js to sleep while pages are loaded,  seems ineffective...
 function sleep(milliseconds) {
     var start = new Date().getTime();
@@ -13,11 +8,31 @@ function sleep(milliseconds) {
     }
 }
 
+function getpn() {
+  var url = 'https://raw.githubusercontent.com/shellfarmer/LinkedInUserDump/master/postnominals.txt';
+  var pn = [];
+  fetch(url)
+    .then((resp) => resp.text())
+    .then(function(data) {
+      var lines = data.split(/\n/);
+      for (var i = 0; i < lines.length; i++) {
+        // only push this line if it contains a non whitespace character.
+        if (/\S/.test(lines[i])) {
+          pn.push(lines[i].replace(/\n|\r/g, "").trim());
+        }
+      }
+    });
+  return pn;
+}
+
 var urls = [];
 var count = 0;
 var finished = '';
 var page = '';
-var postnominals = ['mba', 'msc', 'bsc', 'ma', 'acma', 'cissp', 'crt', 'mcipd', 'certrp', 'sphr', 'acis', 'frsa', 'ba', 'phd'];
+//var postnominals = ['mba', 'msc', 'bsc', 'ma', 'acma', 'cissp', 'crt', 'mcipd', 'certrp', 'sphr', 'acis', 'frsa', 'ba', 'phd', 'cciso'];
+
+
+var postnominals = []
 var filename = '';
 var userdata = '';
 var shortnames = '';
@@ -33,6 +48,7 @@ function isUpperCase(str) {
 
 // This function is called onload in the popup code
 function dumpCurrentPage(callback, junk, genusers) {
+    postnominals = getpn();
     var header = 'LinkedIn Name';
     if (junk){
       header = 'LinkedIn Name,clean name';
@@ -60,8 +76,6 @@ function dumpCurrentPage(callback, junk, genusers) {
                   filename = filename + '-' + filterparts[i].split('"')[0];
                 }
             }
-            console.log(message.url);
-
 
             // No more results return data to popup
             if (message.body.includes('Your search returned no results. Try removing filters or rephrasing your search')) {
@@ -85,22 +99,27 @@ function dumpCurrentPage(callback, junk, genusers) {
                     //var person = people[i].split('</span')[0];
                     var person = people[i].split('"')[0];
                     var short = false;
-                    console.log(person);
                     if(junk || genusers){
                         // try and catch well known accrediations
                         var username = person.toLowerCase();
 
                         // Replace diacritics with standard characters then remove any none ascii chars - technically not needed for AD but may avoid some problems
-                        username = person.normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '');
+                        username = username.normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, "");
 
                         // clear out any possible dividers
                         username = username.replace('/', ' ');
                         username = username.replace('\\', ' ');
 
-
-                        // Remove postnomials
+                        // Remove postnominals
                         for(var index in postnominals){
-                            username = username.replace(new RegExp("\\b" + postnominals[index] + "\\b"), '');
+                            //regex failing?
+                            //username = username.replace(new RegExp("\\b" + postnominals[index] + "\\b"), " ");
+
+                            username = username.replace(" " + postnominals[index] + " "," ");
+                            if(username.endsWith(" " + postnominals[index])) {
+                              username = username.substring(0, username.lastIndexOf(" "));
+                            }
+
                         }
 
                         username = username.trim();
@@ -119,6 +138,13 @@ function dumpCurrentPage(callback, junk, genusers) {
                         // Remove any random bits after commas such as accrediations
                         if(username.includes(',')){
                           username = username.split(',')[0].trim();
+                          nameparts = username.split(' ');
+                          lastname = nameparts[nameparts.length - 1];
+                        }
+
+                        // Remove any random bits after hyphens such as accrediations
+                        if(username.includes('-')){
+                          username = username.split('-')[0].trim();
                           nameparts = username.split(' ');
                           lastname = nameparts[nameparts.length - 1];
                         }
@@ -198,7 +224,7 @@ function dumpCurrentPage(callback, junk, genusers) {
                 }
 
 
-                sleep(5000 + (Math.floor(Math.random() * 20000)));userdata + shortnames
+                sleep(5000 + (Math.floor(Math.random() * 20000)));
                 // Set the tab to the require page, update the tab and execute the injected js
                 chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
                     var tab = tabs[0];
@@ -216,8 +242,8 @@ function dumpCurrentPage(callback, junk, genusers) {
         }
         catch(err)
         {
-            finished = 'Error'
-            console.log(err)
+            finished = 'Error';
+            console.log(err);
             callback(userdata.concat(shortnames), finished, count, filename);
         }
     });
