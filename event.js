@@ -118,8 +118,8 @@ function dumpCurrentPage(tabid, junk, genusers) {
                         }
 
                         // Remove any random bits after hyphens such as accrediations
-                        if(username.includes('-')){
-                          username = username.split('-')[0].trim();
+                        if(username.includes(' - ')){
+                          username = username.split(' - ')[0].trim();
                         }
 
                         // Remove postnominals
