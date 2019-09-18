@@ -62,6 +62,7 @@ ci
 cia
 cie
 ciia
+cipd
 cipm
 cisa
 cisa
@@ -256,6 +257,7 @@ mfph
 mfpm
 mfsrh
 mhk
+milt
 mipa
 mjdf
 mla
