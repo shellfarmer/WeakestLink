@@ -1,3 +1,9 @@
+cip
+bbs
+fcii
+acim
+irmcert
+iosh
 acii
 chart.pr
 dip
