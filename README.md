@@ -1,6 +1,8 @@
 # WeakestLink
 Scrapes employees from a LinkedIn company page and performs a number of actions to clean up the names so they can be used in enumeration and password attacks.
 
+Firefox support coming soon!
+
 Currently the following clean up actions are performed:
 
 * Normalises any NFD characters for example ó to o
@@ -21,4 +23,4 @@ As the first and last name fields on LinkedIn are free form text fields then the
 * Extract archive file to location of your choice
 * Browse to "chrome://extensions/"
 * Enable Developr mode
-* Load Unpacked extension and select the folder where you extracted to
+* Load Unpacked extension and select the folder where the extracted file are
