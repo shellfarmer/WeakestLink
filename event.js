@@ -9,7 +9,7 @@ function sleep(milliseconds) {
 }
 
 function getpn() {
-  var url = 'https://raw.githubusercontent.com/shellfarmer/LinkedInUserDump/master/postnominals.txt';
+  var url = 'https://raw.githubusercontent.com/shellfarmer/WeakestLink/master/postnominals.txt';
   var pn = [];
   fetch(url)
     .then((resp) => resp.text())
@@ -85,7 +85,7 @@ function dumpCurrentPage(tabid, junk, genusers) {
             }
 
             // Out of search credits
-            if (message.body.includes('upgrade to Premium to continue searching')){
+            if (message.body.includes('upgrade to Premium to continue searching') || message.body.includes('Search limit reached')){
                 finished = 'search limit hit';
                 completed(userdata.concat(shortnames), finished, count, filename);
                 return;
@@ -98,7 +98,12 @@ function dumpCurrentPage(tabid, junk, genusers) {
                 var people = message.body.split('"title":{"textDirection":"FIRST_STRONG","text":"');
                 for (var i = 1; i < people.length; i++) {
                     //var person = people[i].split('</span')[0];
-                    var person = people[i].split('"')[0];
+                    var person = people[i].split('",')[0];
+                    person = person.replace('"','');
+                    if(person === "")
+                    {
+                      continue;
+                    }
                     var short = false;
                     if(junk || genusers){
                         // try and catch well known accrediations
@@ -110,7 +115,7 @@ function dumpCurrentPage(tabid, junk, genusers) {
                         // clear out any possible dividers
                         username = username.replace('/', ' ');
                         username = username.replace('\\', ' ');
-                        username = username.replace('\(.*\)', '')
+                        username = username.replace(/\(.*\)/gi, ' ')
 
                         // Remove any random bits after commas such as accrediations
                         if(username.includes(',')){
@@ -178,7 +183,7 @@ function dumpCurrentPage(tabid, junk, genusers) {
                         // last.first           key.anna
                         var user12 =  lastname + firstname;
                         // fl                   ak
-                        var user13 =  lastname.charAt(0) + firstname.charAt(0);
+                        var user13 =  firstname.charAt(0) + lastname.charAt(0);
 
                         if(short){
                             shortnames = shortnames.concat('"' + person + '",' + firstname + ' ' + lastname + ',' + user1 + ',' + user2 + ',' + user3 + ',' + user4 + ',' + user5 +  ',' + user6 +  ',' + user7  +  ',' + user8  +  ',' + user9  +  ',' + user10 +  ',' + user11  +  ',' + user12  +  ',' + user13   +'\n');
@@ -218,7 +223,8 @@ function dumpCurrentPage(tabid, junk, genusers) {
                 sleep(5000 + (Math.floor(Math.random() * 20000)));
 
                 // Set the tab to the require page, update the tab and execute the injected js
-                chrome.tabs.get(tabid, function(tab) {
+                //chrome.tabs.get(tabid, function(tab) {
+
                   if (chrome.runtime.lastError) {
                     finished = 'Cancelled';
                     completed(userdata.concat(shortnames), finished, count, filename);
@@ -233,7 +239,7 @@ function dumpCurrentPage(tabid, junk, genusers) {
                     });
                     urls.push(message.url);
                   }
-                });
+                //});
             }
         }
         catch(err)

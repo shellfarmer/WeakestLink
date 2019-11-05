@@ -1,11 +1,10 @@
 {
     "manifest_version": 2,
-    "name": "LinkedIn User Dump",
+    "name": "WeakestLink",
     "description": "Extracts users from the currently viewed LinkedIn company page",
-    "version": "0.5",
+    "version": "1.0",
     "background": {
-        "scripts": ["event.js"],
-        "persistent": false
+        "scripts": ["event.js"]
     },
     "browser_action": {
         "default_popup": "popup.html",
