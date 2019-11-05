@@ -19,7 +19,7 @@ window.addEventListener('load', function(evt) {
         chrome.runtime.getBackgroundPage(function(eventPage) {
             eventPage.dumpCurrentPage(tabid, junk, genusers)
         });
-        
+
         setTimeout(function(){ window.close(); }, 3000);
     };
 });
