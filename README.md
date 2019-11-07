@@ -20,7 +20,7 @@ As the first and last name fields on LinkedIn are free form text fields then the
 
 ## Installation
 
-1. From the Chrome store - https://chrome.google.com/webstore/detail/weakestlink/jiobcfh amdgbhhhnkmoblghheddjfnpo  - Recommended as this will auto-update
+1. From the Chrome store - https://chrome.google.com/webstore/detail/weakestlink/jiobcfhamdgbhhhnkmoblghheddjfnpo  - Recommended as this will auto-update
 2. Load unpacked extension
     * Clone repository
     * Browse to "chrome://extensions/"
