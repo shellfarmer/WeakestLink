@@ -1,5 +1,5 @@
 # WeakestLink
-Scrapes employees from a LinkedIn company page and performs a number of actions to clean up the names so they can be used in enumeration and password attacks.
+Scrapes employees from a LinkedIn company page, performs a number of clean up steps to remove any junk and then generates a range of possible username formats so they can be used in username enumeration and password attacks.
 
 Firefox support coming soon!
 
