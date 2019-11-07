@@ -7,8 +7,9 @@ Currently the following clean up actions are performed:
 
 * Normalises any NFD characters for example ó to o
 * Removes any none printable ASCII characters
-* Downloads a file of postnominals and removes them from name
-* Removes seperators, quotes from name and any data after a comma or curly bracket
+* Downloads a file of postnominals (Which is updated frequently) and removes them
+* Removes any separators and quotes
+* Removes any data after a comma or curly bracket
 * Removes the dot that follows a hidden surname
 * Attempts to identify the first and last name of user (Might not be great for international companies!)
 * Converts to lowercase and trims any redundant white space
@@ -17,9 +18,9 @@ As the first and last name fields on LinkedIn are free form text fields then the
 
 ## Installation
 
-1. Recommended - From the Chrome store - https://chrome.google.com/webstore/detail/weakestlink/jiobcfhamdgbhhhnkmoblghheddjfnpo
+1. From the Chrome store - https://chrome.google.com/webstore/detail/weakestlink/jiobcfhamdgbhhhnkmoblghheddjfnpo  - Recommended as this will auto-update
 2. Load unpacked extension
 * Clone repository
 * Browse to "chrome://extensions/"
-* Enable Developr mode
-* Load Unpacked extension and select the folder where you cloned the repository to
+* Enable Developer mode
+* Click Load Unpacked extension and select the folder where you cloned the repository to
