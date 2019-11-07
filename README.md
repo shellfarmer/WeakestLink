@@ -33,6 +33,7 @@ As the first and last name fields on LinkedIn are free form text fields then the
 * Browse to the required company page
 * Click 'See all ### employees on LinkedIn'
 * If there are more than 1000 results (100 pages) then use the filters to reduce the number and run multiple dumps
+* Click the WeakestLink icon
 * Click the Dump Users button
 * The target page will be scraped and will move onto the next page until there are no more results or the max limit is hit.
 * Once the scraping is complete a message box will popup and a CSV with containing the results will be downloaded
