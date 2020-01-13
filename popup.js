@@ -7,8 +7,13 @@ window.addEventListener('load', function(evt) {
 
         var junk = document.getElementById('junk').checked;
         var genusers = document.getElementById('genusers').checked;
+        var headline = document.getElementById('headline').checked;
+        var nickname = document.getElementById('nickname').checked;
 
-        chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
+        chrome.tabs.query({
+            active: true,
+            currentWindow: true
+        }, function(tabs) {
             var tab = tabs[0];
             var temp = tab.url + '&page=1';
             tabid = tab.id;
@@ -17,9 +22,11 @@ window.addEventListener('load', function(evt) {
             });
         });
         chrome.runtime.getBackgroundPage(function(eventPage) {
-            eventPage.dumpCurrentPage(tabid, junk, genusers)
+            eventPage.dumpCurrentPage(tabid, junk, genusers, headline, nickname)
         });
 
-        setTimeout(function(){ window.close(); }, 3000);
+        setTimeout(function() {
+            window.close();
+        }, 3000);
     };
 });

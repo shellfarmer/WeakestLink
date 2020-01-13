@@ -19,6 +19,7 @@ bac
 bao
 basc
 bbs
+bch
 bchd
 bchir
 bdents
@@ -63,6 +64,8 @@ ch
 chart.pr
 chb
 chfi
+chm
+chstj
 ci
 cia
 cie
@@ -90,6 +93,7 @@ cscu
 csi
 cspo
 csslp
+cstj
 ctm
 cvo
 cyberops
@@ -117,6 +121,7 @@ ds
 dsc
 dsm
 dso
+dstj
 dtech
 dtm&h
 duniv
@@ -130,18 +135,22 @@ edrp
 eitca/is
 engd
 erd
+esqstj
 faia
 fca
 fcca
 fcii
 fcma
+fcpara
 fda
 fdeng
+fds
 fdsc
 fds rcs
 fdsrcs
 fds rcsed
 ffa
+fficm
 fipa
 fmva
 frca
@@ -150,6 +159,7 @@ frcgp
 frcn
 frcog
 frcophth
+frcot
 frcp
 frcpath
 frcpch
@@ -159,6 +169,7 @@ frcpsych
 frcr
 frcs
 frcsed
+frcsglasg
 frcsi
 frsa
 gasf
@@ -178,6 +189,7 @@ gcip
 gcmg
 gcpm
 gcsi
+gcstj
 gcti
 gcux
 gcvo
@@ -212,6 +224,7 @@ iosh
 irmcert
 is20controls
 iscap
+ism
 iso
 jp
 kbe
@@ -225,6 +238,7 @@ kg
 kp
 kpfsm
 kpm
+kstj
 kt
 lc
 lg
@@ -235,6 +249,7 @@ lt
 lvo
 ma
 mao
+march
 mb
 mba
 mbbch
@@ -275,6 +290,7 @@ mmath
 mmed
 mmedsci
 mms
+mnm
 mp
 mphil
 mphys
@@ -284,6 +300,7 @@ mrcem
 mrcgp
 mrcog
 mrcophth
+mrcot
 mrcp
 mrcpath
 mrcpch
@@ -300,6 +317,7 @@ msc
 msci
 msm
 msp
+mstj
 mvo
 obe
 obi
@@ -307,8 +325,10 @@ om
 osce
 oscp
 osee
+ostj
 oswe
 oswp
+pc
 pc 
 pentest+
 pgcert
@@ -326,10 +346,14 @@ qhp
 qhs
 qpm
 qs
+qv
 qvrm
+rcps
+rcsed
 rd
 rrc
 rvm
+sbstj
 scj
 security
 security+
@@ -338,6 +362,7 @@ shk
 sl
 sphr
 sscp
+ssstj
 td
 ud
 va
