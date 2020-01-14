@@ -1,4 +1,5 @@
-// Function to allow js to sleep while pages are loaded,  seems ineffective...
+// Function to slow down the pace of attack
+
 function sleep(milliseconds) {
     var start = new Date().getTime();
     for (var i = 0; i < 1e7; i++) {
@@ -53,9 +54,11 @@ var userdata = '';
 var shortnames = '';
 
 function completed(data, finished, count, filename, tabid) {
+   console.log("Completed: " + finished)
     var blob = new Blob([data], {
         type: "text/csv;charset=utf-8"
     });
+    console.log("Data: " + blob)
     chrome.downloads.download({
         'url': URL.createObjectURL(blob),
         'filename': filename
@@ -74,12 +77,11 @@ function completed(data, finished, count, filename, tabid) {
     chrome.tabs.executeScript(tabid, {
         code: code
     });
-
     chrome.runtime.reload();
 }
 
 // This function is called onload in the popup code
-function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
+function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
     postnominals = getpn();
     var lastnameprefix = ['o', 'da', 'de', 'di', 'al', 'ul', 'el'];
 
@@ -87,8 +89,6 @@ function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
     if (nickname) {
         var nicknames = getnicknames();
     }
-
-
 
     var headlinetitles = "";
     if (headline) {
@@ -105,10 +105,17 @@ function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
 
     userdata = header + '\n';
 
-    // Inject the content script into the current page
-    sleep(2000);
-    chrome.tabs.executeScript(null, {
-        file: 'content.js'
+    chrome.webNavigation.onCompleted.addListener(function(details) {
+          if(details.tabId == tabid && finished === ""){
+            sleep(500);
+            chrome.tabs.executeScript(tabid, {
+                file: 'content.js'
+            });
+          }
+    }, { url:[{hostContains:"linkedin.com"}] });
+
+    chrome.tabs.update(tabid, {
+        url: url
     });
 
     // Listener that recieves messages from injected content.js
@@ -124,14 +131,14 @@ function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
             }
 
             // No more results return data to popup
-            if (message.body.includes('Your search returned no results. Try removing filters or rephrasing your search')) {
+            if (message.body.includes('Your search returned no results. Try removing filters or rephrasing your search') && finished === "") {
                 finished = 'completed';
                 completed(userdata.concat(shortnames), finished, count, filename, tabid);
                 return;
             }
 
             // Out of search credits
-            if (message.body.includes('upgrade to Premium to continue searching') || message.body.includes('Search limit reached')) {
+            if ((message.body.includes('upgrade to Premium to continue searching') || message.body.includes('Search limit reached')) && finished === "") {
                 finished = 'search limit hit';
                 completed(userdata.concat(shortnames), finished, count, filename, tabid);
                 return;
@@ -140,7 +147,6 @@ function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
             // Check if url has already been parsed
             if (!urls.includes(message.url) && finished === '') {
                 // parse users and store in userdata
-                //var people = message.body.split('<span class=\"name actor-name\">');
                 var people = message.body.split('"title":{"textDirection":"FIRST_STRONG","text":"');
                 for (var i = 1; i < people.length; i++) {
                     //var person = people[i].split('</span')[0];
@@ -150,11 +156,8 @@ function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
 
                     if (headline) {
                         var headlinetext = people[i].split('"headline":{"textDirection":"FIRST_STRONG","text":"')[1].split('",')[0];;
-                        //console.log("headline: " + headlinetext);
-
                         var subline = people[i].split('"subline":{"textDirection":"FIRST_STRONG","text":"')[1].split('",')[0];
                         headlinedata = "\"" + headlinetext + "\",\"" + subline + "\",";
-                        //console.log("subline: " + subline);
                     }
 
                     person = person.replace('"', '');
@@ -221,7 +224,6 @@ function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
                         firstname = firstname.trim().toLowerCase();
                         lastname = lastname.trim().toLowerCase();
                         username = username.trim().toLowerCase();
-
                     }
 
                     var firstnames = [firstname];
@@ -294,9 +296,6 @@ function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
                     var href = message.url.concat('&page=', 2);
                 }
 
-                // Swap for?   setTimeout(function(){ ; }, 2000);
-                sleep(5000 + (Math.floor(Math.random() * 5000)));
-
                 if (chrome.runtime.lastError) {
                     finished = 'Cancelled';
                     completed(userdata.concat(shortnames), finished, count, filename, tabid);
@@ -304,13 +303,8 @@ function dumpCurrentPage(tabid, junk, genusers, headline, nickname) {
                     chrome.tabs.update(tabid, {
                         url: href
                     });
-                    sleep(5000 + (Math.floor(Math.random() * 5000)));
-                    chrome.tabs.executeScript(tabid, {
-                        file: 'content.js'
-                    });
                     urls.push(message.url);
                 }
-
             }
         } catch (err) {
             finished = 'error - ' + err.message;
