@@ -54,30 +54,34 @@ var userdata = '';
 var shortnames = '';
 
 function completed(data, finished, count, filename, tabid) {
-   console.log("Completed: " + finished)
     var blob = new Blob([data], {
         type: "text/csv;charset=utf-8"
     });
-    console.log("Data: " + blob)
+    chrome.downloads.onChanged.addListener(function(delta) {
+      if (!delta.state || (delta.state.current != 'complete')) {
+          return;
+      }
+
+      var message = "";
+      var code = "";
+
+      //message = "<html><body><h2><img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true>WeakestLink Dump Finished</h2><p> Finished with final status message of : $$STATUS$$ </p><p> Retrieved details of $$COUNT$$ users </p><p> &quot;$$FILENAME$$&quot; should be in your downloads</p><p>Click <a href=$$URL$$> here</a> to return to the first page</p><body></html>";
+      message = "<html><body><style>.body{background-color:#f7f7f7}.flex-container{height:100%;padding:0;margin:0;display:-webkit-box;display:-moz-box;display:-ms-flexbox;display:-webkit-flex;display:flex;align-items:center;justify-content:center;flex-direction:column;margin-top:50px}.row{width:auto;border:1px;border-radius:5px;box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19);text-align:center}.inner{padding:10px}table{border-collapse:collapse;width:100%}td,th{padding:15px}table,td,th{border:1px solid #ddd;text-align:left}</style><div class=flex-container> <img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true /> <h2> WeakestLink Dump Finished </h2><div class=row><div class=inner><table><tr><td>Final Status</td><td>$$STATUS$$</td> </tr> <tr> <td>Total Users Identified</td><td>$$COUNT$$</td></tr> <tr> <td>File Location</td><td>&quot;$$FILENAME$$&quot;</td></tr></table><p>Click <a href=$$URL$$>here</a> to return to the first search page</p></div></div></div></body></html>";
+      message = message.replace('$$STATUS$$', finished);
+      message = message.replace('$$COUNT$$', count);
+      message = message.replace('$$FILENAME$$', filename);
+      message = message.replace('$$URL$$', urls[0].substring(0, urls[0].length - 7));
+      code = 'document.body.innerHTML = "' + message + '";';
+      chrome.tabs.executeScript(tabid, {
+          code: code
+      });
+      chrome.runtime.reload();
+    });
+
     chrome.downloads.download({
         'url': URL.createObjectURL(blob),
         'filename': filename
     });
-
-    var message = "";
-    var code = "";
-
-    //message = "<html><body><h2><img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true>WeakestLink Dump Finished</h2><p> Finished with final status message of : $$STATUS$$ </p><p> Retrieved details of $$COUNT$$ users </p><p> &quot;$$FILENAME$$&quot; should be in your downloads</p><p>Click <a href=$$URL$$> here</a> to return to the first page</p><body></html>";
-    message = "<html><body><style>.body{background-color:#f7f7f7}.flex-container{height:100%;padding:0;margin:0;display:-webkit-box;display:-moz-box;display:-ms-flexbox;display:-webkit-flex;display:flex;align-items:center;justify-content:center;flex-direction:column;margin-top:50px}.row{width:auto;border:1px;border-radius:5px;box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19);text-align:center}.inner{padding:10px}table{border-collapse:collapse;width:100%}td,th{padding:15px}table,td,th{border:1px solid #ddd;text-align:left}</style><div class=flex-container> <img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true /> <h2> WeakestLink Dump Finished </h2><div class=row><div class=inner><table><tr><td>Final Status</td><td>$$STATUS$$</td> </tr> <tr> <td>Total Users Identified</td><td>$$COUNT$$</td></tr> <tr> <td>File Location</td><td>&quot;$$FILENAME$$&quot;</td></tr></table><p>Click <a href=$$URL$$>here</a> to return to the first search page</p></div></div></div></body></html>";
-    message = message.replace('$$STATUS$$', finished);
-    message = message.replace('$$COUNT$$', count);
-    message = message.replace('$$FILENAME$$', filename);
-    message = message.replace('$$URL$$', urls[0].substring(0, urls[0].length - 7));
-    code = 'document.body.innerHTML = "' + message + '";';
-    chrome.tabs.executeScript(tabid, {
-        code: code
-    });
-    chrome.runtime.reload();
 }
 
 // This function is called onload in the popup code

@@ -3,8 +3,6 @@ Scrapes employees from a LinkedIn company page, performs a number of clean up st
 
 ** Use of this extension is against LinkedIn TOS and your account may be restricted. **
 
-Firefox support coming soon!
-
 Currently the following clean up actions are performed:
 
 * Normalises any NFD characters for example ó to o
@@ -18,7 +16,7 @@ Currently the following clean up actions are performed:
 
 As the first and last name fields on LinkedIn are free form text fields then there can be any random combination of data in them. Please ensure you check over the exported list as there will be dodgy names still
 
-## Installation
+## Chrome Installation
 
 1. From the Chrome store - https://chrome.google.com/webstore/detail/weakestlink/jiobcfhamdgbhhhnkmoblghheddjfnpo  - Recommended as this will auto-update
 2. Load unpacked extension
@@ -26,6 +24,14 @@ As the first and last name fields on LinkedIn are free form text fields then the
     * Browse to "chrome://extensions/"
     * Enable Developer mode
     * Click Load Unpacked extension and select the folder where you cloned the repository to
+
+## Firefox Installation - This is a recent port from the Chrome version and may still be buggy
+
+    1. From the Firefox store - https://addons.mozilla.org/en-US/firefox/addon/weakestlink/ - Recommended as this will auto-update
+    2. Load unpacked extension - This is unload when browser is closed unless you configure firefox to maintain Temporary Addons
+        * Clone repository
+        * Browse to "about:debugging"
+        * Click Load Temporary Addon and select the manifest.json file from the folder where you cloned the repository to
 
 ## Usage
 

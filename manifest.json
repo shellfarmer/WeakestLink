@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "WeakestLink",
     "description": "Extracts users from the currently viewed LinkedIn company page",
-    "version": "1.5",
+    "version": "1.6",
     "background": {
         "scripts": ["event.js"]
     },
