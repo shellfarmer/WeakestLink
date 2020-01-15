@@ -27,11 +27,11 @@ As the first and last name fields on LinkedIn are free form text fields then the
 
 ## Firefox Installation - This is a recent port from the Chrome version and may still be buggy
 
-    1. From the Firefox store - https://addons.mozilla.org/en-US/firefox/addon/weakestlink/ - Recommended as this will auto-update
-    2. Load unpacked extension - This is unload when browser is closed unless you configure firefox to maintain Temporary Addons
-        * Clone repository
-        * Browse to "about:debugging"
-        * Click Load Temporary Addon and select the manifest.json file from the folder where you cloned the repository to
+1. From the Firefox store - https://addons.mozilla.org/en-US/firefox/addon/weakestlink/ - Recommended as this will auto-update
+2. Load unpacked extension - This is unload when browser is closed unless you configure firefox to maintain Temporary Addons
+    * Clone repository
+    * Browse to "about:debugging"
+    * Click Load Temporary Addon and select the manifest.json file from the folder where you cloned the repository to
 
 ## Usage
 
