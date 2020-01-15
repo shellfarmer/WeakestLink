@@ -7,14 +7,14 @@ Features:
 - Option to retrieve headline and subline for each user
 - Option to generate short name versions of users for common names such as Jonathan -> John
 - Clean up steps
-* Normalises any NFD characters for example ó to o
-* Removes any none printable ASCII characters
-* Downloads a file and removes postnominal's
-* Removes any data after a comma or curly bracket
-* Removes the dot that follows a hidden surname
-* Attempts to identify the first and last name of user
-* Identifies any common surname prefixes and appends to surname
-* Converts to lowercase and trims any redundant white space
+  * Normalises any NFD characters for example ó to o
+  * Removes any none printable ASCII characters
+  * Downloads a file and removes postnominal's
+  * Removes any data after a comma or curly bracket
+  * Removes the dot that follows a hidden surname
+  * Attempts to identify the first and last name of user
+  * Identifies any common surname prefixes and appends to surname
+  * Converts to lowercase and trims any redundant white space
 
 As the first and last name fields on LinkedIn are free form text fields then there can be any random combination of data in them. Please ensure you check over the exported list as there will be dodgy names still
 
