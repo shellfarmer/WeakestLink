@@ -142,7 +142,7 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
             }
 
             // Out of search credits
-            if ((message.body.includes('upgrade to Premium to continue searching') || message.body.includes('Search limit reached')) && finished === "") {
+            if ((message.body.includes('upgrade to Premium to continue searching') || message.body.includes('Search limit reached') || message.body.includes('You’ve reached the monthly limit for profile searches')) && finished === "") {
                 finished = 'search limit hit';
                 completed(userdata.concat(shortnames), finished, count, filename, tabid);
                 return;
@@ -151,7 +151,7 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
             // Check if url has already been parsed
             if (!urls.includes(message.url) && finished === '') {
                 // parse users and store in userdata
-                var people = message.body.split('"title":{"textDirection":"FIRST_STRONG","text":"');
+                var people = message.body.split('"searchId":"')[1].split('"title":{"textDirection":"FIRST_STRONG","text":"');
                 for (var i = 1; i < people.length; i++) {
                     //var person = people[i].split('</span')[0];
                     var person = people[i].split('",')[0];
