@@ -53,35 +53,45 @@ var filename = '';
 var userdata = '';
 var shortnames = '';
 
+
 function completed(data, finished, count, filename, tabid) {
     var blob = new Blob([data], {
         type: "text/csv;charset=utf-8"
     });
+
+    var downloadid = 0;
+
     chrome.downloads.onChanged.addListener(function(delta) {
-      if (!delta.state || (delta.state.current != 'complete')) {
-          return;
-      }
+        if (!delta.state || (delta.state.current != 'complete') || delta.id != downloadid) {
+            return;
+        }
 
-      var message = "";
-      var code = "";
 
-      //message = "<html><body><h2><img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true>WeakestLink Dump Finished</h2><p> Finished with final status message of : $$STATUS$$ </p><p> Retrieved details of $$COUNT$$ users </p><p> &quot;$$FILENAME$$&quot; should be in your downloads</p><p>Click <a href=$$URL$$> here</a> to return to the first page</p><body></html>";
-      message = "<html><body><style>.body{background-color:#f7f7f7}.flex-container{height:100%;padding:0;margin:0;display:-webkit-box;display:-moz-box;display:-ms-flexbox;display:-webkit-flex;display:flex;align-items:center;justify-content:center;flex-direction:column;margin-top:50px}.row{width:auto;border:1px;border-radius:5px;box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19);text-align:center}.inner{padding:10px}table{border-collapse:collapse;width:100%}td,th{padding:15px}table,td,th{border:1px solid #ddd;text-align:left}</style><div class=flex-container> <img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true /> <h2> WeakestLink Dump Finished </h2><div class=row><div class=inner><table><tr><td>Final Status</td><td>$$STATUS$$</td> </tr> <tr> <td>Total Users Identified</td><td>$$COUNT$$</td></tr> <tr> <td>File Location</td><td>&quot;$$FILENAME$$&quot;</td></tr></table><p>Click <a href=$$URL$$>here</a> to return to the first search page</p></div></div></div></body></html>";
-      message = message.replace('$$STATUS$$', finished);
-      message = message.replace('$$COUNT$$', count);
-      message = message.replace('$$FILENAME$$', filename);
-      message = message.replace('$$URL$$', urls[0].substring(0, urls[0].length - 7));
-      code = 'document.body.innerHTML = "' + message + '";';
-      chrome.tabs.executeScript(tabid, {
-          code: code
+      chrome.downloads.search({'id':downloadid}, function(results)
+      {
+          var downloadpath = results[0]['filename'];
+
+          var message = "";
+          var code = "";
+
+          //message = "<html><body><h2><img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true>WeakestLink Dump Finished</h2><p> Finished with final status message of : $$STATUS$$ </p><p> Retrieved details of $$COUNT$$ users </p><p> &quot;$$FILENAME$$&quot; should be in your downloads</p><p>Click <a href=$$URL$$> here</a> to return to the first page</p><body></html>";
+          message = "<html><body><style>.body{background-color:#f7f7f7}.flex-container{height:100%;padding:0;margin:0;display:-webkit-box;display:-moz-box;display:-ms-flexbox;display:-webkit-flex;display:flex;align-items:center;justify-content:center;flex-direction:column;margin-top:50px}.row{width:auto;border:1px;border-radius:5px;box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19);text-align:center}.inner{padding:10px}table{border-collapse:collapse;width:100%}td,th{padding:15px}table,td,th{border:1px solid #ddd;text-align:left}</style><div class=flex-container> <img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true /> <h2> WeakestLink Dump Finished </h2><div class=row><div class=inner><table><tr><td>Final Status</td><td>$$STATUS$$</td> </tr> <tr> <td>Total Users Identified</td><td>$$COUNT$$</td></tr><tr><td>Downloaded File</td><td>&quot;$$FILENAME$$&quot;</td></tr></table><p>Click <a href=$$URL$$>here</a> to return to the first search page</p></div></div></div></body></html>";
+          message = message.replace('$$STATUS$$', finished);
+          message = message.replace('$$COUNT$$', count);
+          message = message.replace('$$FILENAME$$', downloadpath);
+          message = message.replace('$$URL$$', urls[0].substring(0, urls[0].length - 7));
+          code = 'document.body.innerHTML = "' + message + '";';
+          chrome.tabs.executeScript(tabid, {
+              code: code
+          });
       });
-      chrome.runtime.reload();
+      //chrome.runtime.reload();
     });
 
     chrome.downloads.download({
         'url': URL.createObjectURL(blob),
         'filename': filename
-    });
+    }, function(id) {downloadid = id;});
 }
 
 // This function is called onload in the popup code
@@ -151,7 +161,16 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
             // Check if url has already been parsed
             if (!urls.includes(message.url) && finished === '') {
                 // parse users and store in userdata
-                var people = message.body.split('"searchId":"')[1].split('"title":{"textDirection":"FIRST_STRONG","text":"');
+
+                var jsonlocale = "FIRST_STRONG";
+
+                var peopleblock = message.body.split('"searchId":"')[1];
+
+                // Handle if the formatting of json is different,  picked up from US user
+                if(peopleblock.includes('"title":{"textDirection":"USER_LOCALE","text":"')){
+                    jsonlocale = "USER_LOCALE";
+                }
+                var people = peopleblock.split('"title":{"textDirection":"' + jsonlocale + '","text":"');
                 for (var i = 1; i < people.length; i++) {
                     //var person = people[i].split('</span')[0];
                     var person = people[i].split('",')[0];
@@ -159,13 +178,13 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                     var headlinedata = ""
 
                     if (headline) {
-                        var headlinetext = people[i].split('"headline":{"textDirection":"FIRST_STRONG","text":"')[1].split('",')[0];;
-                        var subline = people[i].split('"subline":{"textDirection":"FIRST_STRONG","text":"')[1].split('",')[0];
+                        var headlinetext = people[i].split('"headline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];;
+                        var subline = people[i].split('"subline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];
                         headlinedata = "\"" + headlinetext + "\",\"" + subline + "\",";
                     }
 
                     person = person.replace('"', '');
-                    if (person === "") {
+                    if (person === "" || person.includes("LinkedIn")) {
                         continue;
                     }
                     var short = false;
