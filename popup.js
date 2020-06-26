@@ -3,17 +3,13 @@ window.addEventListener('load', function(evt) {
     let savebutton = document.getElementById('saveoptions');
     var tabid;
 
-    try {
-         chrome.storage.sync.get('options', function(result) {
-         document.getElementById('junk').checked  = result.options['junk'];
-         document.getElementById('genusers').checked  = result.options['genusers'];
-         document.getElementById('headline').checked  = result.options['headline'];
-         document.getElementById('nickname').checked  = result.options['nickname'];
-     });
-   }
-   catch (err) {
 
-  }
+   chrome.storage.sync.get({'options':{'junk':true,'genusers':true,'headline':false,'nickname':false}}, function(result) {
+   document.getElementById('junk').checked  = result.options['junk'];
+   document.getElementById('genusers').checked  = result.options['genusers'];
+   document.getElementById('headline').checked  = result.options['headline'];
+   document.getElementById('nickname').checked  = result.options['nickname'];
+ });
 
     savebutton.onclick = function(element) {
 

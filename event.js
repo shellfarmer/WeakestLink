@@ -53,7 +53,6 @@ var filename = '';
 var userdata = '';
 var shortnames = '';
 
-
 function completed(data, finished, count, filename, tabid) {
     var blob = new Blob([data], {
         type: "text/csv;charset=utf-8"
@@ -84,8 +83,8 @@ function completed(data, finished, count, filename, tabid) {
           chrome.tabs.executeScript(tabid, {
               code: code
           });
+          chrome.runtime.reload()
       });
-      //chrome.runtime.reload();
     });
 
     chrome.downloads.download({
@@ -295,9 +294,9 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                             }
                         } else if (junk) {
                             if (short) {
-                                shortnames = shortnames.concat(person + ',' + headlinedata + firstname + ',' + lastname + '\n');
+                                shortnames = shortnames.concat(person + ',' + headlinedata + firstname + ' ' + lastname + '\n');
                             } else {
-                                userdata = userdata.concat(person + ',' + headlinedata + firstname + ',' + lastname + '\n');
+                                userdata = userdata.concat(person + ',' + headlinedata + firstname + ' ' + lastname + '\n');
                             }
                         } else {
                             userdata = userdata.concat(person + '\n');
@@ -330,6 +329,7 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                 }
             }
         } catch (err) {
+            console.log(err.message);
             finished = 'error - ' + err.message;
             completed(userdata.concat(shortnames), finished, count, filename, tabid);
         }
