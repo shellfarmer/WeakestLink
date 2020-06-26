@@ -19,7 +19,6 @@
         "tabs",
         "http://www.linkedin.com/*",
         "https://www.linkedin.com/*",
-        "management",
         "downloads",
         "webNavigation",
         "storage"
