@@ -1,6 +1,8 @@
+1.10
+  - Updated to reflect changes to LinkedIn Interface.
 1.9
   - Improved the code for option saving
-  - Fixed some bugs that stopped the extension from being rerun 
+  - Fixed some bugs that stopped the extension from being rerun
   - Fixed an issue with incorrect csv output
 1.8
   - Added ability to save options (Will use browser syncronisation if avaiable)

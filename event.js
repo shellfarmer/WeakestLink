@@ -131,9 +131,14 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
         url: url
     });
 
+    var today = new Date();
+    filename = 'WeakestLinkDump-' + today.toISOString().replace(/:/g,"-") + '.csv';
+
     // Listener that recieves messages from injected content.js
     chrome.runtime.onMessage.addListener(function(message) {
         try {
+
+            /*
             if (filename == '') {
                 filterparts = message.body.split('{"filterValues":[{"displayValue":"');
                 filename = filterparts[1].split('"')[0];
@@ -141,6 +146,13 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                     filename = filename + '-' + filterparts[i].split('"')[0];
                 }
                 filename = filename + '.csv'
+            }
+            */
+
+            if(!message.body.includes('entity-result') && finished === ""){
+                finished = 'completed';
+                completed(userdata.concat(shortnames), finished, count, filename, tabid);
+                return;
             }
 
             // No more results return data to popup
@@ -169,7 +181,8 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                 if(peopleblock.includes('"title":{"textDirection":"USER_LOCALE","text":"')){
                     jsonlocale = "USER_LOCALE";
                 }
-                var people = peopleblock.split('"title":{"textDirection":"' + jsonlocale + '","text":"');
+                //var people = peopleblock.split('"title":{"textDirection":"' + jsonlocale + '","text":"');
+                var people = peopleblock.split('"title":{"textDirection":"FIRST_STRONG","text":"');
                 for (var i = 1; i < people.length; i++) {
                     //var person = people[i].split('</span')[0];
                     var person = people[i].split('",')[0];
@@ -177,8 +190,10 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                     var headlinedata = ""
 
                     if (headline) {
-                        var headlinetext = people[i].split('"headline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];;
-                        var subline = people[i].split('"subline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];
+                        var headlinetext = people[i].split('"primarySubtitle":{"textDirection":"USER_LOCALE","text":"')[1].split('",')[0];;
+                        //var headlinetext = people[i].split('"headline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];;
+                        var subline = people[i].split('"secondarySubtitle":{"textDirection":"USER_LOCALE","text":"')[1].split('",')[0];
+                        //var subline = people[i].split('"subline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];
                         headlinedata = "\"" + headlinetext + "\",\"" + subline + "\",";
                     }
 
