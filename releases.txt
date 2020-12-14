@@ -1,3 +1,6 @@
+1.11
+  - Fixed bug with user locale
+  - Improved some of the error handling and checks for when there no more results
 1.10
   - Updated to reflect changes to LinkedIn Interface.
 1.9

@@ -65,20 +65,29 @@ function completed(data, finished, count, filename, tabid) {
             return;
         }
 
-
       chrome.downloads.search({'id':downloadid}, function(results)
       {
           var downloadpath = results[0]['filename'];
 
           var message = "";
           var code = "";
+          var url = "";
+
+          if (urls.length > 0)
+          {
+            url = urls[0].substring(0, urls[0].length - 7);
+          }
+          else
+          {
+              finished = "Error - No pages parsed"
+          }
 
           //message = "<html><body><h2><img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true>WeakestLink Dump Finished</h2><p> Finished with final status message of : $$STATUS$$ </p><p> Retrieved details of $$COUNT$$ users </p><p> &quot;$$FILENAME$$&quot; should be in your downloads</p><p>Click <a href=$$URL$$> here</a> to return to the first page</p><body></html>";
           message = "<html><body><style>.body{background-color:#f7f7f7}.flex-container{height:100%;padding:0;margin:0;display:-webkit-box;display:-moz-box;display:-ms-flexbox;display:-webkit-flex;display:flex;align-items:center;justify-content:center;flex-direction:column;margin-top:50px}.row{width:auto;border:1px;border-radius:5px;box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19);text-align:center}.inner{padding:10px}table{border-collapse:collapse;width:100%}td,th{padding:15px}table,td,th{border:1px solid #ddd;text-align:left}</style><div class=flex-container> <img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true /> <h2> WeakestLink Dump Finished </h2><div class=row><div class=inner><table><tr><td>Final Status</td><td>$$STATUS$$</td> </tr> <tr> <td>Total Users Identified</td><td>$$COUNT$$</td></tr><tr><td>Downloaded File</td><td>&quot;$$FILENAME$$&quot;</td></tr></table><p>Click <a href=$$URL$$>here</a> to return to the first search page</p></div></div></div></body></html>";
           message = message.replace('$$STATUS$$', finished);
           message = message.replace('$$COUNT$$', count);
           message = message.replace('$$FILENAME$$', downloadpath);
-          message = message.replace('$$URL$$', urls[0].substring(0, urls[0].length - 7));
+          message = message.replace('$$URL$$', url);
           code = 'document.body.innerHTML = "' + message + '";';
           chrome.tabs.executeScript(tabid, {
               code: code
@@ -96,6 +105,7 @@ function completed(data, finished, count, filename, tabid) {
 // This function is called onload in the popup code
 function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
     postnominals = getpn();
+
     var lastnameprefix = ['o', 'da', 'de', 'di', 'al', 'ul', 'el'];
 
     // This is sloppy, swap with loading from file and find a decent source of names!  What to do with multiples such as Elizabeth
@@ -137,6 +147,7 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
     // Listener that recieves messages from injected content.js
     chrome.runtime.onMessage.addListener(function(message) {
         try {
+            var pagecount = 0;
 
             /*
             if (filename == '') {
@@ -148,16 +159,17 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                 filename = filename + '.csv'
             }
             */
-
-            if(!message.body.includes('entity-result') && finished === ""){
-                finished = 'completed';
+            /*
+            if(!message.body.includes('"title":{"textDirection":"') && finished === ""){
+                finished = 'Completed';
                 completed(userdata.concat(shortnames), finished, count, filename, tabid);
                 return;
             }
+            */
 
             // No more results return data to popup
             if (message.body.includes('Your search returned no results. Try removing filters or rephrasing your search') && finished === "") {
-                finished = 'completed';
+                finished = 'Completed';
                 completed(userdata.concat(shortnames), finished, count, filename, tabid);
                 return;
             }
@@ -173,16 +185,17 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
             if (!urls.includes(message.url) && finished === '') {
                 // parse users and store in userdata
 
-                var jsonlocale = "FIRST_STRONG";
+                var jsonlocale = "USER_LOCALE";
 
                 var peopleblock = message.body.split('"searchId":"')[1];
-
                 // Handle if the formatting of json is different,  picked up from US user
-                if(peopleblock.includes('"title":{"textDirection":"USER_LOCALE","text":"')){
-                    jsonlocale = "USER_LOCALE";
+                if(peopleblock.includes('ntityCustomTrackingInfo"},"title":{"textDirection":"FIRST_STRONG","text":"')){
+                    jsonlocale = "FIRST_STRONG";
                 }
+
                 //var people = peopleblock.split('"title":{"textDirection":"' + jsonlocale + '","text":"');
-                var people = peopleblock.split('"title":{"textDirection":"FIRST_STRONG","text":"');
+                var people = peopleblock.split('"title":{"textDirection":"' + jsonlocale + '","text":"');
+
                 for (var i = 1; i < people.length; i++) {
                     //var person = people[i].split('</span')[0];
                     var person = people[i].split('",')[0];
@@ -190,17 +203,32 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                     var headlinedata = ""
 
                     if (headline) {
+                      if (people[i].includes('"primarySubtitle":{"textDirection":'))
+                      {
                         var headlinetext = people[i].split('"primarySubtitle":{"textDirection":"USER_LOCALE","text":"')[1].split('",')[0];;
-                        //var headlinetext = people[i].split('"headline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];;
                         var subline = people[i].split('"secondarySubtitle":{"textDirection":"USER_LOCALE","text":"')[1].split('",')[0];
-                        //var subline = people[i].split('"subline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];
-                        headlinedata = "\"" + headlinetext + "\",\"" + subline + "\",";
+                      }
+                      else
+                      {
+                        var subline = people[i].split('"subline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];
+                        var headlinetext = people[i].split('"headline":{"textDirection":"' + jsonlocale + '","text":"')[1].split('",')[0];;
+                      }
+
+                      headlinedata = "\"" + headlinetext + "\",\"" + subline + "\",";
                     }
 
                     person = person.replace('"', '');
-                    if (person === "" || person.includes("LinkedIn")) {
+                    if (person === "") {
                         continue;
                     }
+
+
+                    pagecount++;
+
+                    if(person.includes("LinkedIn")){
+                      continue;
+                    }
+
                     var short = false;
                     if (junk || genusers || nickname) {
                         // try and catch well known accrediations
@@ -321,6 +349,14 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
                     count++;
                 }
 
+                // Check if no further users added on page - Could this fail if they all hidden?
+                if(pagecount == 0 && finished === ""){
+                    finished = 'Completed';
+                    completed(userdata.concat(shortnames), finished, count, filename, tabid);
+                    return;
+                }
+
+
                 // Increment page to next one
                 if (message.url.includes('&page=')) {
                     var urlparts = message.url.split('&page=');
@@ -345,7 +381,7 @@ function dumpCurrentPage(url, tabid, junk, genusers, headline, nickname) {
             }
         } catch (err) {
             console.log(err.message);
-            finished = 'error - ' + err.message;
+            finished = 'Error - ' + err.message;
             completed(userdata.concat(shortnames), finished, count, filename, tabid);
         }
     });
