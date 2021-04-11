@@ -1,3 +1,6 @@
+2.0 - Lot of code rewritten so increased chance of bugs,  please raise issues on https://github.com/shellfarmer/WeakestLink
+  - Swapped over to performing background API requests resulting in speed increase and hopefully reduced issues from LinkedIn UI changes
+  - Improved some of the regex checks
 1.11
   - Fixed bug with user locale
   - Improved some of the error handling and checks for when there no more results

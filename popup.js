@@ -43,7 +43,7 @@ window.addEventListener('load', function(evt) {
             currentWindow: true
         }, function(tabs) {
             var tab = tabs[0];
-            var url = tab.url.replace("COMPANY_PAGE_CANNED_SEARCH", "FACTED_SEARCH") + '&page=1';
+            var url = tab.url.replace("COMPANY_PAGE_CANNED_SEARCH", "FACTED_SEARCH")
             tabid = tab.id;
 
             chrome.runtime.getBackgroundPage(function(eventPage) {
