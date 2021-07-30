@@ -4,12 +4,13 @@ Scrapes employees from a LinkedIn company page, performs a number of clean up st
 ** Use of this extension is against LinkedIn TOS and your account may be restricted. **
 
 Features:
-- Option to retrieve headline and subline for each user
+- Option to retrieve headline, subline and handle for each user
 - Option to generate short name versions of users for common names such as Jonathan -> John
 - Clean up steps
   * Normalises any NFD characters for example ó to o
   * Removes any none printable ASCII characters
-  * Downloads a file and removes postnominal's
+  * Downloads a wordlist and removes postnominals
+  * Downloads a wordlist and removes honorifics
   * Removes any data after a comma or curly bracket
   * Removes the dot that follows a hidden surname
   * Attempts to identify the first and last name of user
@@ -27,7 +28,7 @@ As the first and last name fields on LinkedIn are free form text fields then the
     * Enable Developer mode
     * Click Load Unpacked extension and select the folder where you cloned the repository to
 
-## Firefox Installation - This is a port from the Chrome version and may still be buggy
+## Firefox Installation
 
 1. From the Firefox store - https://addons.mozilla.org/en-US/firefox/addon/weakestlink/ - Recommended as this will auto-update
 2. Load unpacked extension - This is unload when browser is closed unless you configure firefox to maintain Temporary Addons
@@ -39,7 +40,7 @@ As the first and last name fields on LinkedIn are free form text fields then the
 
 * Sign into LinkedIn
 * Browse to the required company page
-* Click 'See all ### employees on LinkedIn'
+* Click '# employees'
 * If there are more than 1000 results (100 pages) then use the filters to reduce the number and run multiple dumps
 * Click the WeakestLink icon
 * Click the Dump Users button

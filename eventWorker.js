@@ -7,7 +7,7 @@ function userParse(jd) {
         var name = '';
         var headline = '';
         var subline = '';
-        var url = '';
+        var handle = '';
 
         if (jd.elements[e].results[x].title.hasOwnProperty('text')) {
           name = jd.elements[e].results[x].title.text;
@@ -25,9 +25,11 @@ function userParse(jd) {
           subline = jd.elements[e].results[x].secondarySubtitle.text;
         }
 
-        url = jd.elements[e].results[x].navigationUrl;
+        var url = jd.elements[e].results[x].navigationUrl.split('/');
 
-        users.push(new Array(name, headline, subline, url, 'image?'));
+        handle = url[url.length-1].split('?')[0];
+
+        users.push(new Array(name, headline, subline, handle));
       }
     }
   }
@@ -101,7 +103,7 @@ self.addEventListener(
           }
 
           if (totalResultCount == 0) {
-            totalResultCount = Math.ceil(jd.metadata.totalResultCount / 40) - 1;
+            totalResultCount = Math.ceil(jd.metadata.totalResultCount / 40);
             if (totalResultCount > 25) {
               totalCount = 25;
             }

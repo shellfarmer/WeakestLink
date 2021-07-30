@@ -26,6 +26,23 @@ function getpn() {
   return pn;
 }
 
+function getHonorifics() {
+  var url = 'https://raw.githubusercontent.com/shellfarmer/WeakestLink/master/honorifics.txt';
+  var honorifics = [];
+  fetch(url)
+    .then((resp) => resp.text())
+    .then(function (data) {
+      var lines = data.split(/\n/);
+      for (var i = 0; i < lines.length; i++) {
+        // only push this line if it contains a non whitespace character.
+        if (/\S/.test(lines[i])) {
+          honorifics.push(lines[i].replace(/\n|\r/g, '').trim());
+        }
+      }
+    });
+  return honorifics;
+}
+
 function getnicknames() {
   var url = 'https://raw.githubusercontent.com/shellfarmer/WeakestLink/master/nicknames.txt';
   var nicknames = [];
@@ -49,12 +66,14 @@ var count = 0;
 var finished = '';
 var page = '';
 var postnominals = [];
+var honorifics = [];
 var nicknames = [];
 var filename = '';
 var userdata = '';
 var shortnames = '';
 var lastnameprefix = ['o', 'da', 'de', 'di', 'al', 'ul', 'el'];
 var junk = false;
+var headline = false;
 var count = 0;
 var run = false;
 var maxrequests = 0;
@@ -129,6 +148,7 @@ function addPerson(personarray) {
     // clear out any possible dividers
     username = username.replace(/\//g, ' ');
     username = username.replace(/\\/g, ' ');
+    username = username.replace(/\"/g, ' ');
     username = username.replace(/\(.*\)/gi, ' ');
     username = username.replace(/\[.*\]/gi, ' ');
 
@@ -142,14 +162,22 @@ function addPerson(personarray) {
       username = username.split(' - ')[0].trim();
     }
 
-    // Remove postnominals
+    // Remove postnominals - Switch this to regex
     for (var index in postnominals) {
       //regex failing?
       //username = username.replace(new RegExp("\\b" + postnominals[index] + "\\b"), " ");
 
       username = username.replace(' ' + postnominals[index] + ' ', ' ');
-      if (username.endsWith(' ' + postnominals[index])) {
+      if (username.toUpperCase().endsWith(' ' + postnominals[index].toUpperCase())) {
         username = username.substring(0, username.lastIndexOf(' '));
+      }
+    }
+
+    // Remove honorifics - Switch this to regex
+    for (var index in honorifics) {
+
+      if (username.toUpperCase().startsWith(honorifics[index].toUpperCase() + ' ') || username.toUpperCase().startsWith(honorifics[index].toUpperCase() + '. ')) {
+        username = username.substring(username.indexOf(' '));
       }
     }
 
@@ -220,7 +248,11 @@ function addPerson(personarray) {
       // fl                   ak
       var user13 = firstname.charAt(0) + lastname.charAt(0);
 
-      var headlinedata = '"' + personarray[1] + '","' + personarray[2] + '",';
+      var headlinedata = "";
+
+      if (headline) {
+        headlinedata = '"' + personarray[1] + '","' + personarray[2] + '","'+ personarray[3] + '",';
+      }
 
       var personline = '"' +  person +  '",' +  headlinedata +  firstname +  ' ' +  lastname +  ',' +  user1 +  ',' +  user2 +  ',' +  user3 +  ',' +  user4 +  ',' +  user5 +  ',' +  user6 +  ',' +  user7 +  ',' +  user8 +  ',' +  user9 +  ',' +  user10 +  ',' +  user11 +  ',' +  user12 +  ',' +  user13 +  '\n';
 
@@ -244,11 +276,13 @@ function addPerson(personarray) {
 }
 
 // This function is called onload in the popup code
-function dumpCurrentPage(url, intabid, junkoption, genusersoption, headline, nicknameoption) {
+function dumpCurrentPage(url, intabid, junkoption, genusersoption, headlinoption, nicknameoption) {
   if (run) return;
 
   postnominals = getpn();
+  honorifics = getHonorifics();
   junk = junkoption;
+  headline = headlinoption;
   genusers = genusersoption;
   nickname = nicknameoption;
   tabid = intabid;
@@ -264,7 +298,7 @@ function dumpCurrentPage(url, intabid, junkoption, genusersoption, headline, nic
 
   var headlinetitles = '';
   if (headline) {
-    headlinetitles = ',headline,subline';
+    headlinetitles = ',headline,subline,handle';
   }
 
   var header = 'LinkedIn Name';
