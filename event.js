@@ -314,7 +314,7 @@ function dumpCurrentPage(url, intabid, junkoption, genusersoption, headlinoption
   chrome.webNavigation.onCompleted.addListener(
     function (details) {
       if (details.tabId == tabid && finished === '') {
-        sleep(500);
+        sleep(250);
         chrome.tabs.executeScript(tabid, {
           file: 'content.js',
         });

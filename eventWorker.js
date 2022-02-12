@@ -1,4 +1,16 @@
 var users = [];
+var totalResultCount = 0;
+var status = 0;
+
+// Function to slow down the pace of attack
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if (new Date().getTime() - start > milliseconds) {
+      break;
+    }
+  }
+}
 
 function userParse(jd) {
   for (e = 0; e < jd.elements.length; e++) {
@@ -35,6 +47,46 @@ function userParse(jd) {
   }
 }
 
+function getData(i, queryParameters, csrftoken, timeout)
+{
+  sleep(timeout);
+  var xhr = new XMLHttpRequest();
+  xhr.withCredentials = true;
+  var url =
+    'https://www.linkedin.com/voyager/api/search/dash/clusters?decorationId=com.linkedin.voyager.dash.deco.search.SearchClusterCollection-92&origin=FACETED_SEARCH&q=all&query=(flagshipSearchIntent:SEARCH_SRP,queryParameters:(' +
+    queryParameters +
+    '),includeFiltersInResponse:false)&count=40&start=' +i * 40;
+
+  xhr.open('GET', url, false);
+  xhr.setRequestHeader('csrf-token', csrftoken);
+  xhr.setRequestHeader('x-restli-protocol-version', '2.0.0');
+  xhr.send();
+
+  if (xhr.status == 200) {
+
+    if(xhr.responseText.includes('You’ve reached the monthly limit for profile searches.')){
+      self.postMessage({ type: 'error', message: "Search limit reached" });
+      return;
+    }
+
+    var jd = JSON.parse(xhr.responseText);
+
+    if(jd.metadata.totalResultCount == 0){
+      self.postMessage({ type: 'error', message: "No results found" });
+      return;
+    }
+
+    if (totalResultCount == 0) {
+      totalResultCount = Math.ceil(jd.metadata.totalResultCount / 40);
+      if (totalResultCount > 25) {
+        totalCount = 25;
+      }
+    }
+    userParse(jd);
+  }
+  status = xhr.status;
+}
+
 self.addEventListener(
   'message',
   function (e) {
@@ -43,6 +95,9 @@ self.addEventListener(
     var currentCompany = '';
     var geoUrn = '';
     var profileLanguage = '';
+    var serviceCategory = '';
+    var title = '';
+    
 
     urlparts = decodeURI(data.url).split('?')[1].split('&');
 
@@ -67,54 +122,38 @@ self.addEventListener(
         profileLanguage = profileLanguage.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
         queryParameters += 'profileLanguage:List(' + profileLanguage + '),';
       }
+
+      if (urlparts[i].includes('serviceCategory')) {
+        serviceCategory = urlparts[i].split('=')[1];
+        serviceCategory = serviceCategory.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+        queryParameters += 'serviceCategory:List(' + serviceCategory + '),';
+      }
+
+      if (urlparts[i].includes('title')) {
+        title = urlparts[i].split('=')[1];
+        title = title.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+        queryParameters += 'title:List(' + title + '),';
+      }
+
     }
 
     queryParameters += 'resultType:List(PEOPLE)';
 
     var i = 0;
-    var totalResultCount = 0;
-
+    var timeout = 500;
     do {
-      (function (i) {
-        var xhr = new XMLHttpRequest();
-        xhr.withCredentials = true;
-        var url =
-          'https://www.linkedin.com/voyager/api/search/dash/clusters?decorationId=com.linkedin.voyager.dash.deco.search.SearchClusterCollection-92&origin=FACETED_SEARCH&q=all&query=(flagshipSearchIntent:SEARCH_SRP,queryParameters:(' +
-          queryParameters +
-          '),includeFiltersInResponse:false)&count=40&start=' +i * 40;
+      //(function (i) {
 
-        xhr.open('GET', url, false);
-        xhr.setRequestHeader('csrf-token', data.csrftoken);
-        xhr.setRequestHeader('x-restli-protocol-version', '2.0.0');
-        xhr.send();
+       setTimeout(getData(i, queryParameters, data.csrftoken, timeout), timeout);
 
-        if (xhr.status == 200) {
-
-          if(xhr.responseText.includes('You’ve reached the monthly limit for profile searches.')){
-            self.postMessage({ type: 'error', message: "Search limit reached" });
-            return;
-          }
-
-          var jd = JSON.parse(xhr.responseText);
-
-          if(jd.metadata.totalResultCount == 0){
-            self.postMessage({ type: 'error', message: "No results found" });
-            return;
-          }
-
-          if (totalResultCount == 0) {
-            totalResultCount = Math.ceil(jd.metadata.totalResultCount / 40);
-            if (totalResultCount > 25) {
-              totalCount = 25;
-            }
-          }
-          userParse(jd);
-        } else {
+        if (status == 200){
+        }
+        else {
           // handle errors better?
           self.postMessage({ type: 'error', message: xhr.status });
           console.log(xhr.status);
         }
-      })(i);
+      //})(i);
       i++;
       self.postMessage({
         type: 'status',
