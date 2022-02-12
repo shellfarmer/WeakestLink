@@ -99,7 +99,12 @@ self.addEventListener(
     var title = '';
     
 
-    urlparts = decodeURI(data.url).split('?')[1].split('&');
+    try {
+      urlparts = decodeURI(data.url).split('?')[1].split('&');
+    } catch (err) {
+      self.postMessage({ type: 'error', message: 'Unable to parse URL, check you are on a search results page' });
+    }
+    
 
     queryParameters = '';
 

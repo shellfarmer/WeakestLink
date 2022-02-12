@@ -23,7 +23,6 @@
         "downloads",
         "webNavigation",
         "storage",
-        "cookies",
-        "alarms"
+        "cookies"
     ]
 }
