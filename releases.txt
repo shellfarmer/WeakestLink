@@ -1,6 +1,6 @@
 2.2 
-- Fixed bug were dumping didnt stop after 1000 results
-- Added title and industry as extra search paramaters.  Can now use current company, location, language, industry and title.
+- Fixed bug where dumping didn't stop after 1000 results
+- Added title and industry as extra search parameters.  Can now use current company, location, language, industry and title.
 - Slowed down collection of data to avoid API rate limiting
 - Fixed but where extension doesn't handle users running it on wrong page
 2.1
@@ -23,7 +23,7 @@
   - Fixed some bugs that stopped the extension from being rerun
   - Fixed an issue with incorrect csv output
 1.8
-  - Added ability to save options (Will use browser syncronisation if avaiable)
+  - Added ability to save options (Will use browser synchronisation if available)
   - Added link on final status page so downloaded csv can be opened
   - Fixed issue with international users getting no results
 1.7
@@ -37,21 +37,21 @@
   - Ported to Firefox
   - Added new final status page when dump is completed
 1.3
-  - Added option to eenerate additional shortnames for common names
+  - Added option to generate additional short names for common names
 1.2
-  - Added headline and subline retrival
+  - Added headline and subline retrieval
 1.1
   - Fixed issue with wrong name in plugin
 1.0
   - Renamed to WeakestLink
-  - Added additial search limit check
-  - Fixed bugs with full stop and hypen removal code affecting some names
+  - Added additional search limit check
+  - Fixed bugs with full stop and hyphen removal code affecting some names
 0.5
-  - Moved large chunk of code from the intial popup to the event page so the popup doesn't have to stay opens
+  - Moved large chunk of code from the initial popup to the event page so the popup doesn't have to stay opens
 0.4
-  - Postnominals now retieved from github repo so they can be updated without extra releases
+  - Postnominals now retrieved from github repo so they can be updated without extra releases
   - Improved postnominal replacement code
-  - Added additional cleanup step if names contains a hypen
+  - Added additional cleanup step if names contains a hyphen
 0.3
   - Added ability to handle LinkedIn "short names"
 0.2
