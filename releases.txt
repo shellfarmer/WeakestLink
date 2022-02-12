@@ -1,6 +1,6 @@
 2.2 
 - Fixed bug were dumping didnt stop after 1000 results
-- Added title and industry as extra search paramaters
+- Added title and industry as extra search paramaters.  Can now use current company, location, language, industry and title.
 - Slowed down collection of data to avoid API rate limiting
 - Fixed but where extension doesn't handle users running it on wrong page
 2.1
