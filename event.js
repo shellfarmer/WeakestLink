@@ -211,10 +211,16 @@ function addPerson(personarray) {
 
   var firstnames = [firstname];
 
+  var headlinedata = "";
+
   if (nickname) {
     if (typeof nicknames[firstname] != 'undefined') {
       firstnames.push(nicknames[firstname]);
     }
+  }
+
+  if (headline) {
+    headlinedata = '"' + personarray[1] + '","' + personarray[2] + '","'+ personarray[3] + '",';
   }
 
   for (var index in firstnames) {
@@ -225,7 +231,7 @@ function addPerson(personarray) {
       var user1 = firstname;
       // firstlast            annakey
       var user2 = firstname + lastname;
-      // first.last           anna.key&page=5
+      // first.last           anna.key
       var user3 = firstname + '.' + lastname;
       // firstl               annak
       var user4 = firstname + lastname.charAt(0);
@@ -248,13 +254,7 @@ function addPerson(personarray) {
       // fl                   ak
       var user13 = firstname.charAt(0) + lastname.charAt(0);
 
-      var headlinedata = "";
-
-      if (headline) {
-        headlinedata = '"' + personarray[1] + '","' + personarray[2] + '","'+ personarray[3] + '",';
-      }
-
-      var personline = '"' +  person +  '",' +  headlinedata +  firstname +  ' ' +  lastname +  ',' +  user1 +  ',' +  user2 +  ',' +  user3 +  ',' +  user4 +  ',' +  user5 +  ',' +  user6 +  ',' +  user7 +  ',' +  user8 +  ',' +  user9 +  ',' +  user10 +  ',' +  user11 +  ',' +  user12 +  ',' +  user13 +  '\n';
+      var personline = '"' +  person + '",' + headlinedata + firstname +  ' ' +  lastname +  ',' +  user1 +  ',' +  user2 +  ',' +  user3 +  ',' +  user4 +  ',' +  user5 +  ',' +  user6 +  ',' +  user7 +  ',' +  user8 +  ',' +  user9 +  ',' +  user10 +  ',' +  user11 +  ',' +  user12 +  ',' +  user13 +  '\n';
 
       if (short) {
         shortnames = shortnames.concat(personline);
@@ -263,12 +263,12 @@ function addPerson(personarray) {
       }
     } else if (junk) {
       if (short) {
-        shortnames = shortnames.concat(person + ',' + headlinedata + firstname + ' ' + lastname + '\n');
+        shortnames = shortnames.concat('"' + person + '",' + headlinedata + firstname + ' ' + lastname + '\n');
       } else {
-        userdata = userdata.concat(person + ',' + headlinedata + firstname + ' ' + lastname + '\n');
+        userdata = userdata.concat('"' + person + '",' + headlinedata + firstname + ' ' + lastname + '\n');
       }
     } else {
-      userdata = userdata.concat(person + '\n');
+      userdata = userdata.concat('"' + person + '"\n');
     }
     short = false;
   }

@@ -1,3 +1,6 @@
+2.3 - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
+- Fixed a bug where undefined was being included in an output option
+- Improved some of the output code to handle punctuation being included in output
 2.2 
 - Fixed bug where dumping didn't stop after 1000 results
 - Added title and industry as extra search parameters.  Can now use current company, location, language, industry and title.
@@ -9,7 +12,6 @@
 - Added extra clean up step to remove honorifics from start of names (Dr, prof etc)
 - Added extra removal step for quotes
 - Added LinkedIn handle to be used in any future attacks (https://github.com/mxrch/revealin)
-
 2.0 - Lot of code rewritten so increased chance of bugs,  please raise issues on https://github.com/shellfarmer/WeakestLink
   - Swapped over to performing background API requests resulting in speed increase and hopefully reduced issues from LinkedIn UI changes
   - Improved some of the regex checks
