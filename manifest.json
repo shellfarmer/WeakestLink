@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "WeakestLink",
     "description": "Extracts users from the currently viewed LinkedIn company page",
-    "version": "2.3",
+    "version": "2.4",
     "content_security_policy": "font-src data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; object-src 'self';",
     "background": {
         "scripts": ["event.js"]
@@ -17,7 +17,6 @@
         }
     },
     "permissions": [
-        "tabs",
         "http://www.linkedin.com/*",
         "https://www.linkedin.com/*",
         "downloads",

@@ -1,3 +1,6 @@
+2.4 - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
+- Removed unnecessary permissions
+- Fixed some formatting bugs in output
 2.3 - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
 - Fixed a bug where undefined was being included in an output option
 - Improved some of the output code to handle punctuation being included in output

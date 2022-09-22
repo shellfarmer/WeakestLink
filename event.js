@@ -248,9 +248,9 @@ function addPerson(personarray) {
       // last                 key
       var user10 = lastname;
       // last.f               key.a
-      var user11 = lastname + firstname.charAt(0);
+      var user11 = lastname + '.' + firstname.charAt(0);
       // last.first           key.anna
-      var user12 = lastname + firstname;
+      var user12 = lastname + '.' + firstname;
       // fl                   ak
       var user13 = firstname.charAt(0) + lastname.charAt(0);
 
