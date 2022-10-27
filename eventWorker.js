@@ -78,9 +78,9 @@ function getData(i, queryParameters, csrftoken, timeout)
 
     if (totalResultCount == 0) {
       totalResultCount = Math.ceil(jd.metadata.totalResultCount / 40);
-      if (totalResultCount > 25) {
-        totalCount = 25;
-      }
+    }
+    if (totalResultCount > 25) {
+      totalResultCount = 25;
     }
     userParse(jd);
   }
@@ -97,14 +97,15 @@ self.addEventListener(
     var profileLanguage = '';
     var serviceCategory = '';
     var title = '';
-    
+    var industry = '';
+
 
     try {
       urlparts = decodeURI(data.url).split('?')[1].split('&');
     } catch (err) {
       self.postMessage({ type: 'error', message: 'Unable to parse URL, check you are on a search results page' });
     }
-    
+
 
     queryParameters = '';
 
@@ -132,6 +133,13 @@ self.addEventListener(
         serviceCategory = urlparts[i].split('=')[1];
         serviceCategory = serviceCategory.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
         queryParameters += 'serviceCategory:List(' + serviceCategory + '),';
+      }
+
+      // industry=["96"]
+      if (urlparts[i].includes('industry')) {
+        industry = urlparts[i].split('=')[1];
+        industry = industry.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+        queryParameters += 'industry:List(' + industry + '),';
       }
 
       if (urlparts[i].includes('title')) {

@@ -1,10 +1,14 @@
+2.5  - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
+- Added industry filter
+- fixed bug in max page count
+- fixed bug with selection options for headline/subline collection
 2.4 - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
 - Removed unnecessary permissions
 - Fixed some formatting bugs in output
 2.3 - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
 - Fixed a bug where undefined was being included in an output option
 - Improved some of the output code to handle punctuation being included in output
-2.2 
+2.2
 - Fixed bug where dumping didn't stop after 1000 results
 - Added title and industry as extra search parameters.  Can now use current company, location, language, industry and title.
 - Slowed down collection of data to avoid API rate limiting

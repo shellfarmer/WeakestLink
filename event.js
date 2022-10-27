@@ -268,7 +268,12 @@ function addPerson(personarray) {
         userdata = userdata.concat('"' + person + '",' + headlinedata + firstname + ' ' + lastname + '\n');
       }
     } else {
-      userdata = userdata.concat('"' + person + '"\n');
+      if(headline)
+        userdata =  userdata.concat('"' + person + '",' + headlinedata + '\n');
+      else
+        userdata = userdata.concat('"' + person + '"\n');
+   
+        
     }
     short = false;
   }
@@ -296,12 +301,15 @@ function dumpCurrentPage(url, intabid, junkoption, genusersoption, headlinoption
     nicknames = getnicknames();
   }
 
+
   var headlinetitles = '';
+
   if (headline) {
     headlinetitles = ',headline,subline,handle';
   }
 
-  var header = 'LinkedIn Name';
+
+  var header = 'LinkedIn Name' + headlinetitles;
   if (junk) {
     header = 'LinkedIn Name' + headlinetitles + ',clean name';
   }
