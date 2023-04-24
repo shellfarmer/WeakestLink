@@ -1,3 +1,5 @@
+2.6  - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
+ - Updated for new LinkedIn API format
 2.5  - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
 - Added industry filter
 - fixed bug in max page count

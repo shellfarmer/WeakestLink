@@ -13,37 +13,46 @@ function sleep(milliseconds) {
 }
 
 function userParse(jd) {
+  console.log(jd.elements.length);
   for (e = 0; e < jd.elements.length; e++) {
-    if (jd.elements[e].hasOwnProperty('results')) {
-      for (x = 0; x < jd.elements[e].results.length; x++) {
+    if (jd.elements[e].hasOwnProperty('items')) {
+      for (x = 0; x < jd.elements[e].items.length; x++) {
         var name = '';
         var headline = '';
         var subline = '';
         var handle = '';
 
-        if (jd.elements[e].results[x].title.hasOwnProperty('text')) {
-          name = jd.elements[e].results[x].title.text;
+        if (!jd.elements[e].items[x].itemUnion.hasOwnProperty('entityResult')) {
+          continue;
         }
+
+        if (!jd.elements[e].items[x].itemUnion.entityResult.hasOwnProperty('title')) {
+          continue;
+        }
+
+        if (jd.elements[e].items[x].itemUnion.entityResult.title.hasOwnProperty('text')) {
+          name = jd.elements[e].items[x].itemUnion.entityResult.title.text;
+        }      
 
         if (name.includes('LinkedIn')) {
           continue;
         }
 
-        if (jd.elements[e].results[x].hasOwnProperty('primarySubtitle') && jd.elements[e].results[x].primarySubtitle.hasOwnProperty('text')) {
-          headline = jd.elements[e].results[x].primarySubtitle.text;
+        if (jd.elements[e].items[x].itemUnion.entityResult.hasOwnProperty('primarySubtitle') && jd.elements[e].items[x].itemUnion.entityResult.primarySubtitle.hasOwnProperty('text')) {
+          headline = jd.elements[e].items[x].itemUnion.entityResult.primarySubtitle.text;
         }
 
-        if (jd.elements[e].results[x].hasOwnProperty('secondarySubtitle') && jd.elements[e].results[x].secondarySubtitle.hasOwnProperty('text')) {
-          subline = jd.elements[e].results[x].secondarySubtitle.text;
+        if (jd.elements[e].items[x].itemUnion.entityResult.hasOwnProperty('secondarySubtitle') && jd.elements[e].items[x].itemUnion.entityResult.secondarySubtitle.hasOwnProperty('text')) {
+          subline = jd.elements[e].items[x].itemUnion.entityResult.secondarySubtitle.text;
         }
 
-        var url = jd.elements[e].results[x].navigationUrl.split('/');
+        var url = jd.elements[e].items[x].itemUnion.entityResult.navigationUrl.split('/');
 
         handle = url[url.length-1].split('?')[0];
 
         users.push(new Array(name, headline, subline, handle));
       }
-    }
+    } 
   }
 }
 

@@ -108,7 +108,7 @@ function completed(data, finished, count, filename, tabid) {
       chrome.tabs.executeScript(tabid, {
         code: code,
       });
-      chrome.runtime.reload();
+      //chrome.runtime.reload();
     });
   });
 
