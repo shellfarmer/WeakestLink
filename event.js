@@ -74,15 +74,197 @@ var shortnames = '';
 var lastnameprefix = ['o', 'da', 'de', 'di', 'al', 'ul', 'el'];
 var junk = false;
 var headline = false;
+var genusers = false;
+var nickname = false;
 var count = 0;
 var run = false;
 var maxrequests = 0;
 var tabid = 0;
+var users = [];
+var totalResultCount = 0;
+var workerStatus = 0;
+
+// Worker functions integrated into service worker
+function userParse(jd) {
+  console.log(jd.elements.length);
+  for (var e = 0; e < jd.elements.length; e++) {
+    if (jd.elements[e].hasOwnProperty('items')) {
+      for (var x = 0; x < jd.elements[e].items.length; x++) {
+        var name = '';
+        var headline = '';
+        var subline = '';
+        var handle = '';
+
+        if (!jd.elements[e].items[x].itemUnion.hasOwnProperty('entityResult')) {
+          continue;
+        }
+
+        if (!jd.elements[e].items[x].itemUnion.entityResult.hasOwnProperty('title')) {
+          continue;
+        }
+
+        if (jd.elements[e].items[x].itemUnion.entityResult.title.hasOwnProperty('text')) {
+          name = jd.elements[e].items[x].itemUnion.entityResult.title.text;
+        }
+
+        if (name.includes('LinkedIn')) {
+          continue;
+        }
+
+        if (jd.elements[e].items[x].itemUnion.entityResult.hasOwnProperty('primarySubtitle') && jd.elements[e].items[x].itemUnion.entityResult.primarySubtitle.hasOwnProperty('text')) {
+          headline = jd.elements[e].items[x].itemUnion.entityResult.primarySubtitle.text;
+        }
+
+        if (jd.elements[e].items[x].itemUnion.entityResult.hasOwnProperty('secondarySubtitle') && jd.elements[e].items[x].itemUnion.entityResult.secondarySubtitle.hasOwnProperty('text')) {
+          subline = jd.elements[e].items[x].itemUnion.entityResult.secondarySubtitle.text;
+        }
+
+        var url = jd.elements[e].items[x].itemUnion.entityResult.navigationUrl.split('/');
+        handle = url[url.length - 1].split('?')[0];
+
+        users.push(new Array(name, headline, subline, handle));
+      }
+    }
+  }
+}
+
+async function processLinkedInData(url, csrftoken) {
+  users = [];
+  totalResultCount = 0;
+
+  var urlparts;
+  try {
+    urlparts = decodeURI(url).split('?')[1].split('&');
+  } catch (err) {
+    throw new Error('Unable to parse URL, check you are on a search results page');
+  }
+
+  var queryParameters = '';
+  var currentCompany = '';
+  var geoUrn = '';
+  var profileLanguage = '';
+  var serviceCategory = '';
+  var title = '';
+  var industry = '';
+
+  for (var i = 0; i < urlparts.length; i++) {
+    if (urlparts[i].includes('currentCompany')) {
+      currentCompany = urlparts[i].split('=')[1];
+      currentCompany = currentCompany.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+      queryParameters += 'currentCompany:List(' + currentCompany + '),';
+    }
+
+    if (urlparts[i].includes('geoUrn')) {
+      geoUrn = urlparts[i].split('=')[1];
+      geoUrn = geoUrn.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+      queryParameters += 'geoUrn:List(' + geoUrn + '),';
+    }
+
+    if (urlparts[i].includes('profileLanguage')) {
+      profileLanguage = urlparts[i].split('=')[1];
+      profileLanguage = profileLanguage.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+      queryParameters += 'profileLanguage:List(' + profileLanguage + '),';
+    }
+
+    if (urlparts[i].includes('serviceCategory')) {
+      serviceCategory = urlparts[i].split('=')[1];
+      serviceCategory = serviceCategory.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+      queryParameters += 'serviceCategory:List(' + serviceCategory + '),';
+    }
+
+    if (urlparts[i].includes('industry')) {
+      industry = urlparts[i].split('=')[1];
+      industry = industry.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+      queryParameters += 'industry:List(' + industry + '),';
+    }
+
+    if (urlparts[i].includes('title')) {
+      title = urlparts[i].split('=')[1];
+      title = title.replace(/%2C/g, ',').replace('[', '').replace(']', '').replace(/"/g, '');
+      queryParameters += 'title:List(' + title + '),';
+    }
+  }
+
+  queryParameters += 'resultType:List(PEOPLE)';
+
+  var page = 0;
+  var timeout = 500;
+
+  while (page < totalResultCount || totalResultCount === 0) {
+    await new Promise(resolve => setTimeout(resolve, timeout));
+
+    var apiUrl =
+      'https://www.linkedin.com/voyager/api/search/dash/clusters?decorationId=com.linkedin.voyager.dash.deco.search.SearchClusterCollection-92&origin=FACETED_SEARCH&q=all&query=(flagshipSearchIntent:SEARCH_SRP,queryParameters:(' +
+      queryParameters +
+      '),includeFiltersInResponse:false)&count=40&start=' + page * 40;
+
+    try {
+      var response = await fetch(apiUrl, {
+        headers: {
+          'csrf-token': csrftoken,
+          'x-restli-protocol-version': '2.0.0'
+        },
+        credentials: 'include'
+      });
+
+      if (response.status === 200) {
+        var responseText = await response.text();
+
+        if (responseText.includes("You've reached the monthly limit for profile searches.")) {
+          throw new Error('Search limit reached');
+        }
+
+        var jd = JSON.parse(responseText);
+
+        if (jd.metadata.totalResultCount == 0) {
+          throw new Error('No results found');
+        }
+
+        if (totalResultCount == 0) {
+          totalResultCount = Math.ceil(jd.metadata.totalResultCount / 40);
+        }
+        if (totalResultCount > 25) {
+          totalResultCount = 25;
+        }
+
+        userParse(jd);
+
+        // Update status
+        var message =
+          '<html><body><style>.body{background-color:#f7f7f7}.flex-container{height:100%;padding:0;margin:0;display:-webkit-box;display:-moz-box;display:-ms-flexbox;display:-webkit-flex;display:flex;align-items:center;justify-content:center;flex-direction:column;margin-top:50px}.row{width:auto;border:1px;border-radius:5px;box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19);text-align:center}.inner{padding:10px}table{border-collapse:collapse;width:100%}td,th{padding:15px}table,td,th{border:1px solid #ddd;text-align:left}</style><div class=flex-container> <img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true /> <h2> WeakestLink Dump Running </h2><div class=row><div class=inner><table> <td>Retrieved $$PAGE$$ of $$COUNT$$ page results</td></table><p>Close this tab to stop dumping</p></div></div></div></body></html>';
+        message = message.replace('$$PAGE$$', page + 1);
+        message = message.replace('$$COUNT$$', totalResultCount);
+
+        chrome.scripting.executeScript({
+          target: { tabId: tabid },
+          func: function(htmlContent) {
+            document.body.innerHTML = htmlContent;
+          },
+          args: [message]
+        });
+
+        page++;
+      } else {
+        throw new Error('HTTP ' + response.status);
+      }
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  return users;
+}
+
+// Handle messages from popup
+chrome.runtime.onMessage.addListener(function(request) {
+  if (request.action === 'dumpCurrentPage') {
+    dumpCurrentPage(request.url, request.tabid, request.junk, request.genusers, request.headline, request.nickname);
+  }
+});
 
 function completed(data, finished, count, filename, tabid) {
-  var blob = new Blob([data], {
-    type: 'text/csv;charset=utf-8',
-  });
+  // Convert data to base64 data URL for MV3 compatibility
+  var dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(data);
 
   var downloadid = 0;
 
@@ -95,7 +277,6 @@ function completed(data, finished, count, filename, tabid) {
       var downloadpath = results[0]['filename'];
 
       var message = '';
-      var code = '';
       var url = '';
 
       message =
@@ -104,9 +285,12 @@ function completed(data, finished, count, filename, tabid) {
       message = message.replace('$$COUNT$$', count);
       message = message.replace('$$FILENAME$$', downloadpath);
       message = message.replace('$$URL$$', url);
-      code = 'document.body.innerHTML = "' + message + '";';
-      chrome.tabs.executeScript(tabid, {
-        code: code,
+      chrome.scripting.executeScript({
+        target: { tabId: tabid },
+        func: function(htmlContent) {
+          document.body.innerHTML = htmlContent;
+        },
+        args: [message]
       });
       //chrome.runtime.reload();
     });
@@ -114,7 +298,7 @@ function completed(data, finished, count, filename, tabid) {
 
   chrome.downloads.download(
     {
-      url: URL.createObjectURL(blob),
+      url: dataUrl,
       filename: filename,
     },
     function (id) {
@@ -292,7 +476,7 @@ function dumpCurrentPage(url, intabid, junkoption, genusersoption, headlinoption
   nickname = nicknameoption;
   tabid = intabid;
 
-  chrome.tabs.onRemoved.addListener(function (tabid, removed) {
+  chrome.tabs.onRemoved.addListener(function () {
     chrome.runtime.reload();
   });
 
@@ -323,8 +507,9 @@ function dumpCurrentPage(url, intabid, junkoption, genusersoption, headlinoption
     function (details) {
       if (details.tabId == tabid && finished === '') {
         sleep(250);
-        chrome.tabs.executeScript(tabid, {
-          file: 'content.js',
+        chrome.scripting.executeScript({
+          target: { tabId: tabid },
+          files: ['content.js']
         });
       }
     },
@@ -338,45 +523,10 @@ function dumpCurrentPage(url, intabid, junkoption, genusersoption, headlinoption
   var today = new Date();
   filename = 'WeakestLinkDump-' + today.toISOString().replace(/:/g, '-') + '.csv';
 
-  var worker = new Worker('eventWorker.js');
-
-  worker.addEventListener(
-    'message',
-    function (e) {
-      e = e.data;
-
-      if (e.type == 'persondata') {
-        for (i = 0; i < e.users.length; i++) {
-          addPerson(e.users[i]);
-        }
-
-        finished = 'Completed';
-        completed(userdata.concat(shortnames), finished, count, filename, tabid);
-      } else if (e.type == 'status'){
-        message =
-          '<html><body><style>.body{background-color:#f7f7f7}.flex-container{height:100%;padding:0;margin:0;display:-webkit-box;display:-moz-box;display:-ms-flexbox;display:-webkit-flex;display:flex;align-items:center;justify-content:center;flex-direction:column;margin-top:50px}.row{width:auto;border:1px;border-radius:5px;box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19);text-align:center}.inner{padding:10px}table{border-collapse:collapse;width:100%}td,th{padding:15px}table,td,th{border:1px solid #ddd;text-align:left}</style><div class=flex-container> <img src=https://github.com/shellfarmer/WeakestLink/blob/master/images/logo128.png?raw=true /> <h2> WeakestLink Dump Running </h2><div class=row><div class=inner><table> <td>Retrieved $$PAGE$$ of $$COUNT$$ page results</td></table><p>Close this tab to stop dumping</p></div></div></div></body></html>';
-        message = message.replace('$$PAGE$$', e.page);
-        message = message.replace('$$COUNT$$', e.totalResultCount);
-
-        code = 'document.body.innerHTML = "' + message + '";';
-        chrome.tabs.executeScript(e.tabid, {
-          code: code,
-        });
-      }
-      else {
-        finished = "Data Collection Error: " + e.message;
-        completed(userdata.concat(shortnames), finished, count, filename, tabid);
-      }
-    },
-    false
-  );
-
   // Listener that recieves messages from injected content.js
   chrome.runtime.onMessage.addListener(function (message) {
     try {
       if (run) return;
-
-      var cookie = '';
 
       // No more results return data to popup
       if (message.body.includes('Your search returned no results. Try removing filters or rephrasing your search') && finished === '') {
@@ -397,11 +547,22 @@ function dumpCurrentPage(url, intabid, junkoption, genusersoption, headlinoption
         return;
       }
 
-      chrome.cookies.get({ url: 'https://www.linkedin.com', name: 'JSESSIONID' }, function (cookie) {
-        worker.postMessage({
-          csrftoken: cookie.value.replace(/['"]+/g, ''),
-          url: message.url,
-        });
+      chrome.cookies.get({ url: 'https://www.linkedin.com', name: 'JSESSIONID' }, async function (cookie) {
+        try {
+          var csrftoken = cookie.value.replace(/['"]+/g, '');
+          var users = await processLinkedInData(message.url, csrftoken);
+
+          // Process all users
+          for (var i = 0; i < users.length; i++) {
+            addPerson(users[i]);
+          }
+
+          finished = 'Completed';
+          completed(userdata.concat(shortnames), finished, count, filename, tabid);
+        } catch (error) {
+          finished = 'Data Collection Error: ' + error.message;
+          completed(userdata.concat(shortnames), finished, count, filename, tabid);
+        }
       });
 
       run = true;
