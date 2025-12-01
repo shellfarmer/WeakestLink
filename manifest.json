@@ -24,7 +24,8 @@
     ],
     "host_permissions": [
         "http://www.linkedin.com/*",
-        "https://www.linkedin.com/*"
+        "https://www.linkedin.com/*",
+        "https://raw.githubusercontent.com/*"
     ],
     "web_accessible_resources": [
         {
