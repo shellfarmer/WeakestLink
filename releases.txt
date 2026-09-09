@@ -1,3 +1,4 @@
+2.7 - Updated for manifest v3 - Thanks to https://github.com/Spoonman1091 for the PR!
 2.6  - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
  - Updated for new LinkedIn API format
 2.5  - Note that browsers may warn that the manifest is due to be upgraded to v3, this will happen soon.
