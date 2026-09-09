@@ -46,8 +46,14 @@ window.addEventListener('load', function(evt) {
             var url = tab.url.replace("COMPANY_PAGE_CANNED_SEARCH", "FACTED_SEARCH")
             tabid = tab.id;
 
-            chrome.runtime.getBackgroundPage(function(eventPage) {
-                eventPage.dumpCurrentPage(url, tabid, junk, genusers, headline, nickname)
+            chrome.runtime.sendMessage({
+                action: 'dumpCurrentPage',
+                url: url,
+                tabid: tabid,
+                junk: junk,
+                genusers: genusers,
+                headline: headline,
+                nickname: nickname
             });
             window.close();
         });
